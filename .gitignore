@@ -1,0 +1,14 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+
+# Local SDK settings
+local.properties
+
+# Logs & system
+*.log
+.DS_Store
