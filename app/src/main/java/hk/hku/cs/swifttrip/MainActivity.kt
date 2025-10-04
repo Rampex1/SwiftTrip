@@ -1,6 +1,7 @@
 package hk.hku.cs.swifttrip
 
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -228,33 +229,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSearchResults(searchData: SearchData) {
-        val message = """
-            🔍 Search Results Preview:
-            
-            From: ${searchData.fromLocation}
-            To: ${searchData.toLocation}
-            Departure: ${searchData.departureDate?.let { dateFormat.format(it.time) }}
-            Return: ${searchData.returnDate?.let { dateFormat.format(it.time) }}
-            Passengers: ${searchData.passengers}
-            
-            Found 25 flights and 12 hotels!
-        """.trimIndent()
-
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-
-        // TODO: Navigate to SearchResultsActivity
-        // val intent = Intent(this, SearchResultsActivity::class.java)
-        // intent.putExtra("searchData", searchData)
-        // startActivity(intent)
+        // Navigate to ResultsActivity
+        val intent = Intent(this, ResultsActivity::class.java)
+        intent.putExtra("fromLocation", searchData.fromLocation)
+        intent.putExtra("toLocation", searchData.toLocation)
+        intent.putExtra("departureDate", searchData.departureDate?.timeInMillis ?: 0L)
+        intent.putExtra("returnDate", searchData.returnDate?.timeInMillis ?: 0L)
+        intent.putExtra("passengers", searchData.passengers)
+        startActivity(intent)
     }
 }
-
-// Data class to hold search parameters
-data class SearchData(
-    val fromLocation: String,
-    val toLocation: String,
-    val departureDate: Calendar?,
-    val returnDate: Calendar?,
-    val passengers: String,
-    val timestamp: Long
-)
