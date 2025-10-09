@@ -10,10 +10,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlinx.coroutines.Dispatchers
+import com.google.gson.Gson
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,9 +30,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var passengersDropdown: AutoCompleteTextView
     private lateinit var searchButton: MaterialButton
 
+    private lateinit var apiService: ApiService
+
     // Date formatting
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val calendar = Calendar.getInstance()
+    private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
     // Selected dates
     private var departureDate: Calendar? = null
@@ -44,6 +52,8 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        apiService = ApiService()
 
         initializeViews()
         setupPassengerDropdown()
@@ -203,18 +213,84 @@ class MainActivity : AppCompatActivity() {
         // Show loading toast
         Toast.makeText(this, "Searching for flights and hotels...", Toast.LENGTH_SHORT).show()
 
-        // Simulate API call delay
-        searchButton.postDelayed({
-            // Re-enable button
+        lifecycleScope.launch {
+            val response = getFlightSearchData(searchData)
             searchButton.isEnabled = true
             searchButton.text = "Search Flights & Hotels"
+            // Navigate to results activity
+            showSearchResults(searchData, response)
+        }
 
-            // Show results (placeholder for now)
-            showSearchResults(searchData)
-        }, 2000)
+        // TODO: Implement API calls to hotel services as well, then pass as response to showSearchResults
+    }
 
-        // TODO: Implement actual API calls to flight and hotel services
-        // TODO: Navigate to results activity
+    private fun showSearchResults(searchData: SearchData, flightResponse: FlightResponse?) {
+        // Navigate to ResultsActivity
+        val intent = Intent(this, ResultsActivity::class.java)
+        intent.putExtra("fromLocation", searchData.fromLocation)
+        intent.putExtra("toLocation", searchData.toLocation)
+        intent.putExtra("departureDate", searchData.departureDate?.timeInMillis ?: 0L)
+        intent.putExtra("returnDate", searchData.returnDate?.timeInMillis ?: 0L)
+        intent.putExtra("passengers", searchData.passengers)
+        // Pass flight response as JSON string extra (using Gson for serialization)
+        intent.putExtra("flightResponseJson", Gson().toJson(flightResponse))
+        startActivity(intent)
+    }
+
+    private suspend fun getFlightSearchData(sd: SearchData): FlightResponse? {
+        val token = withContext(Dispatchers.IO) {
+            apiService.getAmadeusAccessToken()
+        }
+
+        if (token == null) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "Failed to fetch access token.", Toast.LENGTH_SHORT).show()
+            }
+            return null
+        }
+
+        val auth = "Bearer $token"
+        val depDateStr = apiDateFormat.format(sd.departureDate?.time ?: return null)
+        val retDateStr = apiDateFormat.format(sd.returnDate?.time ?: return null)
+        val (adults, children) = parsePassengers(sd.passengers)
+
+        val originCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.fromLocation) }
+        val destCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.toLocation) }
+
+        if (originCode == null || destCode == null) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "Invalid locations.", Toast.LENGTH_SHORT).show()
+            }
+            return null
+        }
+
+        val travelers = mutableListOf<Traveler>()
+        repeat(adults) { travelers.add(Traveler("${it + 1}", "ADULT")) }
+        repeat(children) { travelers.add(Traveler("${adults + it + 1}", "CHILD")) }
+
+        val request = FlightSearchRequest(
+            originDestinations = listOf(
+                OriginDestination("1", originCode, destCode, DateTimeRange(depDateStr)),
+                OriginDestination("2", destCode, originCode, DateTimeRange(retDateStr))
+            ),
+            travelers = travelers,
+            sources = listOf("GDS")
+        )
+
+        val response = withContext(Dispatchers.IO) { apiService.getFlightOffers(auth, request) }
+
+        if (response == null || response.data == null) {
+            withContext(Dispatchers.Main) {
+                if (response == null) {
+                    Toast.makeText(this@MainActivity, "Flight search failed (check logs for error).", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "No flights found for this route/dates.", Toast.LENGTH_SHORT).show()
+                }
+            }
+            return null
+        }
+
+        return response
     }
 
     private fun getSearchData(): SearchData {
@@ -228,14 +304,15 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    private fun showSearchResults(searchData: SearchData) {
-        // Navigate to ResultsActivity
-        val intent = Intent(this, ResultsActivity::class.java)
-        intent.putExtra("fromLocation", searchData.fromLocation)
-        intent.putExtra("toLocation", searchData.toLocation)
-        intent.putExtra("departureDate", searchData.departureDate?.timeInMillis ?: 0L)
-        intent.putExtra("returnDate", searchData.returnDate?.timeInMillis ?: 0L)
-        intent.putExtra("passengers", searchData.passengers)
-        startActivity(intent)
+    private fun parsePassengers(passengersStr: String): Pair<Int, Int> {
+        val parts = passengersStr.split(", ")
+        var adults = 0
+        var children = 0
+        parts.forEach { part ->
+            val count = part.substringBefore(" ").toIntOrNull() ?: 0
+            if (part.contains("Adult")) adults += count
+            if (part.contains("Child")) children += count
+        }
+        return adults to children
     }
 }

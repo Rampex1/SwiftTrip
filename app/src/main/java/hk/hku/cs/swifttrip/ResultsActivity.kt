@@ -1,9 +1,6 @@
 package hk.hku.cs.swifttrip
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -12,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.tabs.TabLayout
+import com.google.gson.Gson
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,9 +29,24 @@ class ResultsActivity : AppCompatActivity() {
 
     private var currentTab = 0 // 0 = Flights, 1 = Hotels, 2 = Packages
 
+    // Add this: Store the parsed flight response
+    private var flightResponse: FlightResponse? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
+
+        // Add this: Parse the flight JSON extra early
+        val flightJson = intent.getStringExtra("flightResponseJson")
+        flightResponse = if (flightJson != null) {
+            try {
+                Gson().fromJson(flightJson, FlightResponse::class.java)
+            } catch (e: Exception) {
+                null  // Handle deserialization failure
+            }
+        } else {
+            null
+        }
 
         initializeViews()
         setupToolbar()
@@ -110,9 +123,39 @@ class ResultsActivity : AppCompatActivity() {
     }
 
     private fun loadFlightResults() {
-        val flights = generateMockFlights()
+        val flights: List<Flight> = if (flightResponse?.data?.isNotEmpty() == true) {
+            // Use real data: Map FlightOffer to Flight
+            flightResponse!!.data!!.map { offer ->
+                mapToFlight(offer)
+            }
+        } else {
+            // Fallback to mocks if no real data
+            if (flightResponse == null) {
+                Toast.makeText(this, "No flight data received; using mocks", Toast.LENGTH_SHORT).show()
+            }
+            generateMockFlights()
+        }
+
         resultsCountText.text = "${flights.size} flights found"
         resultsRecyclerView.adapter = FlightAdapter(flights)
+    }
+
+    // Add this: Mapping function from FlightOffer to your mock Flight class
+    private fun mapToFlight(offer: FlightOffer): Flight {
+        val outboundItin = offer.itineraries?.getOrNull(0)  // First itinerary (outbound)
+        val firstSegment = outboundItin?.segments?.getOrNull(0)  // First segment for basic info
+
+        val airline = firstSegment?.carrierCode ?: "Unknown"  // e.g., "AA" (expand to full name if needed)
+        val depTime = firstSegment?.departure?.at?.substring(11, 16) ?: "N/A"  // Extract time from ISO datetime, e.g., "10:30"
+        val depAirport = firstSegment?.departure?.iataCode ?: "N/A"
+        val arrTime = firstSegment?.arrival?.at?.substring(11, 16) ?: "N/A"
+        val arrAirport = firstSegment?.arrival?.iataCode ?: "N/A"
+        val duration = outboundItin?.segments?.size?.let { if (it > 1) "${it - 1} stop(s)" else "Non-stop" } ?: "N/A"
+        val price = offer.price?.total ?: "N/A"
+        val flightClass = "Economy"  // Assume default; pull from offer if available
+        val availability = "Available"  // Amadeus offers are available by default; customize if needed
+
+        return Flight(airline, depTime, depAirport, arrTime, arrAirport, duration, "", price, flightClass, availability)
     }
 
     private fun loadHotelResults() {

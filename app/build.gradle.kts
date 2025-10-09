@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.serialization)  // Add this line
 }
 
 android {
@@ -36,7 +37,17 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.ktor.client.core)
+    // Engine: Choose one (Android or CIO)
+    implementation(libs.ktor.client.android)  // For Android native engine
+    // OR: implementation("io.ktor:ktor-client-cio:3.3.0")  // For CIO engine (multiplatform)
+    // JSON serialization (for Amadeus API responses)
+    implementation(libs.ktor.client.logging)  // Add this
+    implementation(libs.gson)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.androidx.lifecycle.runtime.ktx)  // For lifecycleScope
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -45,4 +56,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    
 }
