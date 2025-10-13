@@ -2,9 +2,11 @@ package hk.hku.cs.swifttrip
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -19,6 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.Dispatchers
 import com.google.gson.Gson
+import androidx.core.graphics.toColorInt
 
 class MainActivity : AppCompatActivity() {
 
@@ -29,6 +32,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var returnDateEdit: TextInputEditText
     private lateinit var passengersDropdown: AutoCompleteTextView
     private lateinit var searchButton: MaterialButton
+    private lateinit var adultPlusButton: MaterialButton
+    private lateinit var adultMinusButton: MaterialButton
+    private lateinit var childPlusButton: MaterialButton
+    private lateinit var childMinusButton: MaterialButton
+    private lateinit var tvAdult: TextView
+    private lateinit var tvChild: TextView
+
+
 
     private lateinit var apiService: ApiService
 
@@ -36,6 +47,10 @@ class MainActivity : AppCompatActivity() {
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val calendar = Calendar.getInstance()
     private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+
+    // Initial passenger counts
+    private var adultCount = 1
+    private var childCount = 0
 
     // Selected dates
     private var departureDate: Calendar? = null
@@ -56,36 +71,76 @@ class MainActivity : AppCompatActivity() {
         apiService = ApiService()
 
         initializeViews()
-        setupPassengerDropdown()
         setupDatePickers()
         setupSearchButton()
+        calculatePassengers()
     }
-
     private fun initializeViews() {
         fromLocationEdit = findViewById(R.id.fromLocationEdit)
         toLocationEdit = findViewById(R.id.toLocationEdit)
         departureDateEdit = findViewById(R.id.departureDateEdit)
         returnDateEdit = findViewById(R.id.returnDateEdit)
-        passengersDropdown = findViewById(R.id.passengersDropdown)
+        adultPlusButton = findViewById(R.id.adultPlusButton)
+        adultMinusButton = findViewById(R.id.adultMinusButton)
+        childPlusButton = findViewById(R.id.childPlusButton)
+        childMinusButton = findViewById(R.id.childMinusButton)
+        tvAdult = findViewById(R.id.tvAdult)
+        tvChild = findViewById(R.id.tvChild)
         searchButton = findViewById(R.id.searchButton)
+
     }
 
-    private fun setupPassengerDropdown() {
-        val passengerOptions = arrayOf(
-            "1 Adult",
-            "2 Adults",
-            "3 Adults",
-            "4 Adults",
-            "1 Adult, 1 Child",
-            "2 Adults, 1 Child",
-            "2 Adults, 2 Children",
-            "3 Adults, 1 Child",
-            "Family (2 Adults, 3 Children)"
-        )
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, passengerOptions)
-        passengersDropdown.setAdapter(adapter)
-        passengersDropdown.setText("1 Adult", false)
+
+    private fun calculatePassengers() {
+        adultPlusButton.setOnClickListener {
+            adultCount = adultCount + 1
+            adultMinusButton.setBackgroundColor("#2196F3".toColorInt())
+            updatePassText("Adult")
+        }
+        adultMinusButton.setOnClickListener {
+            if (adultCount > 1){
+                adultCount = adultCount - 1
+                if (adultCount == 1) {
+                    adultMinusButton.setBackgroundColor("#777679".toColorInt())
+                }
+            }
+            updatePassText("Adult")
+        }
+        childPlusButton.setOnClickListener {
+            childCount = childCount + 1
+            childMinusButton.setBackgroundColor("#2196F3".toColorInt())
+            updatePassText("Child")
+        }
+        childMinusButton.setOnClickListener {
+            if (childCount > 0){
+                childCount = childCount - 1
+                if (childCount == 0) {
+                    childMinusButton.setBackgroundColor("#777679".toColorInt())
+                }
+            }
+            updatePassText("Child")
+        }
+
+
+    }
+    private fun updatePassText(string: String){
+        if (string == "Adult"){
+            if (adultCount == 1){
+                tvAdult.text = adultCount.toString() + " Adult"
+            }
+            else {
+                tvAdult.text = adultCount.toString() + " Adults"
+            }
+        }
+        else{
+            if (childCount == 1){
+                tvChild.text = childCount.toString() + " Child"
+            }
+            else{
+                tvChild.text = childCount.toString() + " Children"
+            }
+        }
     }
 
     private fun setupDatePickers() {
@@ -159,6 +214,17 @@ class MainActivity : AppCompatActivity() {
         val toLocation = toLocationEdit.text.toString().trim()
         val departureText = departureDateEdit.text.toString().trim()
         val returnText = returnDateEdit.text.toString().trim()
+
+        // For whatever reason, the API does not accept traveller counts >= 10.
+        // As such, have implemented this as a temporary measure
+        // Will go back and implement logic so that grey appears when attempted,
+        // but for now error message - kk
+        if(childCount + adultCount > 9){
+                Toast.makeText(this, "Passenger count must be less than 10", Toast.LENGTH_SHORT).show()
+                return false
+        }
+
+
 
         // Validate from location
         if (fromLocation.isEmpty()) {
@@ -252,7 +318,7 @@ class MainActivity : AppCompatActivity() {
         val auth = "Bearer $token"
         val depDateStr = apiDateFormat.format(sd.departureDate?.time ?: return null)
         val retDateStr = apiDateFormat.format(sd.returnDate?.time ?: return null)
-        val (adults, children) = parsePassengers(sd.passengers)
+        val (adults, children) = adultCount to childCount
 
         val originCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.fromLocation) }
         val destCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.toLocation) }
@@ -299,20 +365,8 @@ class MainActivity : AppCompatActivity() {
             toLocation = toLocationEdit.text.toString().trim(),
             departureDate = departureDate,
             returnDate = returnDate,
-            passengers = passengersDropdown.text.toString(),
+            passengers = tvAdult.text.toString() + ", " + tvChild.text.toString(),
             timestamp = System.currentTimeMillis()
         )
-    }
-
-    private fun parsePassengers(passengersStr: String): Pair<Int, Int> {
-        val parts = passengersStr.split(", ")
-        var adults = 0
-        var children = 0
-        parts.forEach { part ->
-            val count = part.substringBefore(" ").toIntOrNull() ?: 0
-            if (part.contains("Adult")) adults += count
-            if (part.contains("Child")) children += count
-        }
-        return adults to children
     }
 }

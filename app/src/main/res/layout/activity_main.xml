@@ -14,22 +14,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp"
+        android:padding="10dp"
         android:background="@drawable/gradient_header"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <TextView
-            android:id="@+id/appTitle"
-            android:layout_width="wrap_content"
+        <ImageView
+            android:id="@+id/appLogo"
+            android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:text="SwiftTrip"
-            android:textSize="32sp"
-            android:textColor="@android:color/white"
-            android:textStyle="bold"
-            android:layout_gravity="center"
-            android:fontFamily="sans-serif-medium" />
+            android:src="@drawable/full_logo"
+            android:scaleType="fitCenter"
+            android:adjustViewBounds="true"
+        android:layout_gravity="center" />
 
         <TextView
             android:id="@+id/appSubtitle"
@@ -49,7 +47,7 @@
         android:id="@+id/searchCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
+        android:layout_margin="10dp"
         app:cardCornerRadius="16dp"
         app:cardElevation="8dp"
         android:backgroundTint="@android:color/white"
@@ -63,7 +61,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
+            android:padding="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -173,30 +171,145 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
-
             <!-- Passengers -->
-            <com.google.android.material.textfield.TextInputLayout
+
+            <!-- Search Button -->
+            <com.google.android.material.card.MaterialCardView
                 android:id="@+id/passengersLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="32dp"
-                android:hint="Passengers"
-                app:startIconDrawable="@drawable/ic_person"
-                app:boxStrokeColor="@color/primary_blue"
-                app:hintTextColor="@color/primary_blue"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+                app:boxBackgroundMode="outline"
+                app:strokeColor="#777679"
+                android:backgroundTint="@android:color/white"
 
-                <AutoCompleteTextView
-                    android:id="@+id/passengersDropdown"
+                android:gravity="center"
+            app:boxStrokeWidthFocused="2dp"
+            app:hintTextColor="#777679">
+
+
+
+
+                <LinearLayout
+                    android:layout_marginTop="8dp"
+
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="none"
-                    android:text="1 Adult"
-                    android:textSize="16sp" />
+                    android:gravity="center"
+                    android:orientation="horizontal">
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_person"
+                        app:tint="#777679"
+                        >
 
-            </com.google.android.material.textfield.TextInputLayout>
+                    </ImageView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:text="Passengers"
+                        android:textSize="16sp"
+                        android:textColor="#777679"
+                        >
 
-            <!-- Search Button -->
+                    </TextView>
+                </LinearLayout>
+
+                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="15dp"
+                    android:padding="16dp">
+
+
+
+                    <!-- Adults Section -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="10dp"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/adultMinusButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:backgroundTint="#777679"
+                            android:paddingHorizontal="0dp"
+                            android:text="-" />
+
+
+                        <TextView
+                            android:id="@+id/tvAdult"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:gravity="center"
+                            android:text="1 Adult"
+                            android:textSize="16sp" />
+
+                        <Button
+                            android:id="@+id/adultPlusButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:backgroundTint="@color/primary_blue"
+                            android:paddingHorizontal="0dp"
+                            android:text="+" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="2dp"
+                        android:layout_height="40dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_separator">
+
+                    </ImageView>
+
+                    <!-- Children Section -->
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="0dp">
+
+                        <Button
+                            android:id="@+id/childMinusButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:backgroundTint="#777679"
+                            android:paddingHorizontal="0dp"
+                            android:text="-" />
+
+
+                        <TextView
+                            android:id="@+id/tvChild"
+                            android:layout_width="80dp"
+                            android:layout_height="40dp"
+                            android:gravity="center"
+
+                            android:text="0 Children"
+                            android:textSize="16sp" />
+
+                        <Button
+                            android:id="@+id/childPlusButton"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:backgroundTint="@color/primary_blue"
+                            android:paddingHorizontal="0dp"
+                            android:text="+" />
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/searchButton"
                 android:layout_width="match_parent"
@@ -243,7 +356,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="• Book 2-8 weeks in advance for best deals\n• Consider nearby airports for more options\n• Check visa requirements for your destination"
+            android:text="• Book 2-8 weeks in advance for best deals\n• Consider nearby airports for more options\n• Check visa requirements for your destination by using our visa checker"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:lineSpacingExtra="2dp" />
