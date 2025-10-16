@@ -115,32 +115,55 @@ class ApiService {
         }
     }
 
-    suspend fun getFlightOffers(auth: String, body: FlightSearchRequest): FlightResponse? {
+    suspend fun getFlightOffers(auth: String, originCode: String, destCode: String, depDateStr: String, retDateStr: String, adults: Int): FlightResponse? {
         return try {
-            Log.d("ApiService", "Sending flight request body: ${Json.encodeToString(FlightSearchRequest.serializer(), body)}")  // Log body JSON
-            val httpResponse = client.post("v2/shopping/flight-offers") {
+            Log.d("ApiService", "✈️ Flight search: $originCode -> $destCode, $depDateStr to $retDateStr, $adults adults")
+
+            val httpResponse = client.get("v2/shopping/flight-offers") {
                 header("Authorization", auth)
-                contentType(ContentType.Application.Json)
-                setBody(body)
+                parameter("originLocationCode", originCode)
+                parameter("destinationLocationCode", destCode)
+                parameter("departureDate", depDateStr)
+                parameter("returnDate", retDateStr)
+                parameter("adults", adults)
+                parameter("currencyCode", "USD")
+                parameter("max", 10)
             }
-            Log.d("ApiService", "Flight API response status: ${httpResponse.status}")
+
+            Log.d("ApiService", "📡 Flight API response status: ${httpResponse.status}")
+
+            // ✅ SIMPLE: Just log the raw JSON
+            val rawResponse = httpResponse.bodyAsText()
+            Log.d("ApiService", "📄 FULL API RESPONSE JSON:")
+            // Split long responses to avoid log truncation
+            rawResponse.chunked(4000).forEachIndexed { index, chunk ->
+                Log.d("ApiService", "JSON Part ${index + 1}: $chunk")
+            }
+
             if (httpResponse.status.value != 200) {
-                val errorBody = httpResponse.bodyAsText()  // Fixed: Read full body as string
-                Log.e("ApiService", "Flight offers failed with status ${httpResponse.status}: $errorBody")
+                Log.e("ApiService", "❌ Flight offers failed: $rawResponse")
                 return null
             }
+
             val response = httpResponse.body<FlightResponse>()
-            Log.d("ApiService", "Flight response data count: ${response.data?.size ?: 0}")
-            
-            // If no flights found, return mock data
-            if (response.data.isNullOrEmpty()) {
-                Log.d("ApiService", "No flights found in API response, returning mock data")
-                return createMockFlightResponse()
+            Log.d("ApiService", "✅ Parsed ${response.data?.size ?: 0} flight offers")
+            response.data?.forEachIndexed { index, flight ->
+                Log.d("ApiService", "┌─── Flight ${index + 1} ───")
+                Log.d("ApiService", "│ ID: ${flight.id}")
+                Log.d("ApiService", "│ 💰 Price: ${flight.price?.currency} ${flight.price?.total}")
+                Log.d("ApiService", "│ 💺 Available Seats: ${flight.numberOfBookableSeats ?: 0}")
+                Log.d("ApiService", "│ ✈️ Airline: ${flight.validatingAirlineCodes?.joinToString() ?: "Unknown"}")
+
+                // Display complete itinerary
+                flight.getCompleteItinerary().forEach { line ->
+                    Log.d("ApiService", "│ $line")
+                }
+
+                Log.d("ApiService", "└──────────────────")
             }
-            
             response
         } catch (e: Exception) {
-            Log.e("ApiService", "Flight offers error: ${e.message}", e)
+            Log.e("ApiService", "🚨 Flight offers error: ${e.message}", e)
             null
         }
     }
@@ -168,6 +191,118 @@ class ApiService {
             
         } catch (e: Exception) {
             Log.e("ApiService", "Hotel offers error: ${e.message}", e)
+            null
+        }
+    }
+
+    suspend fun getAirportCode(auth: String, keyword: String): String? {
+        return try {
+            Log.d("ApiService", "🔍 Searching airport code for: '$keyword'")
+
+            // First try with common airport mappings for better reliability
+            val hardcodedCode = getHardcodedAirportCode(keyword)
+            if (hardcodedCode != null) {
+                Log.d("ApiService", "✅ Using hardcoded airport code: $hardcodedCode")
+                return hardcodedCode
+            }
+
+            // If no hardcoded match, use API lookup
+            val apiCode = getAirportCodeFromAPI(auth, keyword)
+            if (apiCode != null) {
+                Log.d("ApiService", "✅ Using API airport code: $apiCode")
+                return apiCode
+            }
+
+            Log.w("ApiService", "❌ No airport code found for: '$keyword'")
+            null
+
+        } catch (e: Exception) {
+            Log.e("ApiService", "🚨 Airport code error for '$keyword': ${e.message}", e)
+            null
+        }
+    }
+
+    /**
+     * Common airport mappings for reliability
+     */
+    private fun getHardcodedAirportCode(keyword: String): String? {
+        val airportMappings = mapOf(
+            // US Cities
+            "nyc" to "JFK", "new york" to "JFK", "new york city" to "JFK", "manhattan" to "JFK",
+            "los angeles" to "LAX", "la" to "LAX", "lax" to "LAX",
+            "chicago" to "ORD", "ord" to "ORD",
+            "miami" to "MIA", "mia" to "MIA",
+            "las vegas" to "LAS", "vegas" to "LAS",
+            "san francisco" to "SFO", "sfo" to "SFO",
+            "seattle" to "SEA", "sea" to "SEA",
+            "boston" to "BOS", "bos" to "BOS",
+            "washington" to "IAD", "dc" to "IAD", "washington dc" to "IAD",
+
+            // European Cities
+            "london" to "LHR", "lon" to "LHR", "lhr" to "LHR",
+            "paris" to "CDG", "cdg" to "CDG",
+            "frankfurt" to "FRA", "fra" to "FRA",
+            "amsterdam" to "AMS", "ams" to "AMS",
+            "rome" to "FCO", "fco" to "FCO",
+            "madrid" to "MAD", "mad" to "MAD",
+            "barcelona" to "BCN", "bcn" to "BCN",
+            "munich" to "MUC", "muc" to "MUC",
+            "zurich" to "ZRH", "zrh" to "ZRH",
+            "dublin" to "DUB", "dub" to "DUB",
+
+            // Asian Cities
+            "tokyo" to "NRT", "nrt" to "NRT",
+            "singapore" to "SIN", "sin" to "SIN",
+            "hong kong" to "HKG", "hkg" to "HKG",
+            "bangkok" to "BKK", "bkk" to "BKK",
+            "seoul" to "ICN", "icn" to "ICN",
+            "beijing" to "PEK", "pek" to "PEK",
+            "shanghai" to "PVG", "pvg" to "PVG",
+            "dubai" to "DXB", "dxb" to "DXB",
+
+            // Australian Cities
+            "sydney" to "SYD", "syd" to "SYD",
+            "melbourne" to "MEL", "mel" to "MEL"
+        )
+
+        val normalizedKeyword = keyword.lowercase().trim()
+        return airportMappings[normalizedKeyword]
+    }
+
+    private suspend fun getAirportCodeFromAPI(auth: String, keyword: String): String? {
+        return try {
+            Log.d("ApiService", "🌐 Calling Amadeus API for airport code: '$keyword'")
+
+            val response: AirportResponse = client.get("v1/reference-data/locations") {
+                header("Authorization", auth)
+                parameter("keyword", keyword)
+                parameter("subType", "AIRPORT")  // Critical: search only airports
+                parameter("max", 5)  // Get more results to find the best match
+            }.body()
+
+            Log.d("ApiService", "📊 API returned ${response.data?.size ?: 0} airport results")
+
+            // Log all results for debugging
+            response.data?.forEachIndexed { index, airport ->
+                Log.d("ApiService", "  Result ${index + 1}: ${airport.iataCode} - ${airport.name} (${airport.subType})")
+            }
+
+            // Strategy: Prefer AIRPORT type, then AIRPORT_CITY, then others
+            val bestAirport = response.data?.find { it.subType == "AIRPORT" }
+                ?: response.data?.find { it.subType == "AIRPORT_CITY" }
+                ?: response.data?.firstOrNull()
+
+            val selectedCode = bestAirport?.iataCode
+            if (selectedCode != null) {
+                Log.d("ApiService", "🎯 Selected airport: ${bestAirport.name} (${bestAirport.iataCode})")
+            } else {
+                Log.w("ApiService", "❌ No valid airport found in API response")
+            }
+
+            selectedCode
+
+        } catch (e: Exception) {
+            Log.e("ApiService", "🚨 API airport lookup failed for '$keyword': ${e.message}")
             null
         }
     }
@@ -302,98 +437,6 @@ class ApiService {
                             guests = HotelGuests(2),
                             price = HotelPrice("USD", "180.00", "160.00", null),
                             policies = HotelPolicies("GUARANTEED", HotelCancellation("FULL_STAY", "0.00"))
-                        )
-                    )
-                )
-            )
-        )
-    }
-    
-    fun createMockFlightResponse(): FlightResponse {
-        return FlightResponse(
-            data = listOf(
-                FlightOffer(
-                    id = "MOCK001",
-                    source = "GDS",
-                    price = Price("850.00"),
-                    itineraries = listOf(
-                        Itinerary(
-                            segments = listOf(
-                                Segment(
-                                    departure = Airport("JFK", "2024-01-15T10:30:00"),
-                                    arrival = Airport("CDG", "2024-01-15T22:00:00"),
-                                    carrierCode = "AF",
-                                    number = "123"
-                                )
-                            )
-                        )
-                    )
-                ),
-                FlightOffer(
-                    id = "MOCK002",
-                    source = "GDS",
-                    price = Price("920.00"),
-                    itineraries = listOf(
-                        Itinerary(
-                            segments = listOf(
-                                Segment(
-                                    departure = Airport("JFK", "2024-01-15T14:15:00"),
-                                    arrival = Airport("CDG", "2024-01-16T04:45:00"),
-                                    carrierCode = "DL",
-                                    number = "456"
-                                )
-                            )
-                        )
-                    )
-                ),
-                FlightOffer(
-                    id = "MOCK003",
-                    source = "GDS",
-                    price = Price("680.00"),
-                    itineraries = listOf(
-                        Itinerary(
-                            segments = listOf(
-                                Segment(
-                                    departure = Airport("JFK", "2024-01-15T06:00:00"),
-                                    arrival = Airport("CDG", "2024-01-15T20:30:00"),
-                                    carrierCode = "UA",
-                                    number = "789"
-                                )
-                            )
-                        )
-                    )
-                ),
-                FlightOffer(
-                    id = "MOCK004",
-                    source = "GDS",
-                    price = Price("720.00"),
-                    itineraries = listOf(
-                        Itinerary(
-                            segments = listOf(
-                                Segment(
-                                    departure = Airport("JFK", "2024-01-15T11:20:00"),
-                                    arrival = Airport("CDG", "2024-01-16T00:50:00"),
-                                    carrierCode = "BA",
-                                    number = "101"
-                                )
-                            )
-                        )
-                    )
-                ),
-                FlightOffer(
-                    id = "MOCK005",
-                    source = "GDS",
-                    price = Price("650.00"),
-                    itineraries = listOf(
-                        Itinerary(
-                            segments = listOf(
-                                Segment(
-                                    departure = Airport("JFK", "2024-01-15T16:30:00"),
-                                    arrival = Airport("CDG", "2024-01-16T07:15:00"),
-                                    carrierCode = "LH",
-                                    number = "202"
-                                )
-                            )
                         )
                     )
                 )

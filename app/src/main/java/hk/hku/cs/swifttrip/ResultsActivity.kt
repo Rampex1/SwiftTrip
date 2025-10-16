@@ -44,6 +44,7 @@ class ResultsActivity : AppCompatActivity() {
             try {
                 Gson().fromJson(flightJson, FlightResponse::class.java)
             } catch (e: Exception) {
+                Log.e("ResultsActivity", "Error parsing flight JSON: ${e.message}")
                 null  // Handle deserialization failure
             }
         } else {
@@ -55,6 +56,7 @@ class ResultsActivity : AppCompatActivity() {
             try {
                 Gson().fromJson(hotelJson, HotelResponse::class.java)
             } catch (e: Exception) {
+                Log.e("ResultsActivity", "Error parsing hotel JSON: ${e.message}")
                 null  // Handle deserialization failure
             }
         } else {
@@ -136,56 +138,26 @@ class ResultsActivity : AppCompatActivity() {
     }
 
     private fun loadFlightResults() {
-        val flights: List<Flight> = if (flightResponse?.data?.isNotEmpty() == true) {
-            // Use real data: Map FlightOffer to Flight
+        val flights: List<FlightOffer> = if (flightResponse?.data?.isNotEmpty() == true) {
+            // Use real FlightOffer data directly
             Log.d("ResultsActivity", "Using real flight data: ${flightResponse!!.data!!.size} offers")
-            flightResponse!!.data!!.map { offer ->
-                mapToFlight(offer)
+
+            // Log detailed flight information
+            flightResponse!!.data!!.forEachIndexed { index, flight ->
+                Log.d("ResultsActivity", "┌─── REAL FLIGHT ${index + 1} ───")
+                Log.d("ResultsActivity", "│ ${flight.formatFlightForDisplay()}")
+                Log.d("ResultsActivity", "└──────────────────")
             }
+
+            flightResponse!!.data!!
         } else {
-            // Fallback to mocks if no real data
-            Log.d("ResultsActivity", "Using mock flight data")
-            generateMockFlights()
+            return
         }
 
         resultsCountText.text = "${flights.size} flights found"
-        resultsRecyclerView.adapter = FlightAdapter(flights)
-    }
-
-    // Add this: Mapping function from FlightOffer to your mock Flight class
-    private fun mapToFlight(offer: FlightOffer): Flight {
-        val outboundItin = offer.itineraries?.getOrNull(0)  // First itinerary (outbound)
-        val firstSegment = outboundItin?.segments?.getOrNull(0)  // First segment for basic info
-
-        val airline = firstSegment?.carrierCode ?: "Unknown"  // e.g., "AA" (expand to full name if needed)
-        val depTime = firstSegment?.departure?.at?.substring(11, 16) ?: "N/A"  // Extract time from ISO datetime, e.g., "10:30"
-        val depAirport = firstSegment?.departure?.iataCode ?: "N/A"
-        val arrTime = firstSegment?.arrival?.at?.substring(11, 16) ?: "N/A"
-        val arrAirport = firstSegment?.arrival?.iataCode ?: "N/A"
-        val duration = outboundItin?.segments?.size?.let { if (it > 1) "${it - 1} stop(s)" else "Non-stop" } ?: "N/A"
-        val price = offer.price?.total ?: "N/A"
-        val flightClass = "Economy"  // Assume default; pull from offer if available
-        val availability = "Available"  // Amadeus offers are available by default; customize if needed
-
-        return Flight(airline, depTime, depAirport, arrTime, arrAirport, duration, "", price, flightClass, availability)
-    }
-
-    // Add this: Mapping function from HotelOffer to your mock Hotel class
-    private fun mapToHotel(offer: HotelOffer): Hotel {
-        val hotelInfo = offer.hotel
-        val firstOffer = offer.offers?.firstOrNull()
-        
-        val name = hotelInfo?.name ?: "Unknown Hotel"
-        val rating = hotelInfo?.rating?.let { "⭐".repeat(it) } ?: "⭐⭐⭐"
-        val reviews = "(4.5/5 - 150 reviews)" // Default since Amadeus doesn't provide review count
-        val location = hotelInfo?.address?.let { addr ->
-            "📍 ${addr.cityName ?: "Unknown City"}, ${addr.lines?.firstOrNull() ?: ""}"
-        } ?: "📍 Location not available"
-        val amenities = "WiFi • Breakfast • Pool" // Default amenities
-        val price = firstOffer?.price?.total?.let { "$$it/night" } ?: "Price not available"
-        val availability = "Available" // Default availability
-        
-        return Hotel(name, rating, reviews, location, amenities, price, availability)
+        resultsRecyclerView.adapter = FlightOfferAdapter(flights) { flight ->
+            showFlightDetails(flight)
+        }
     }
 
     private fun loadHotelResults() {
@@ -211,20 +183,38 @@ class ResultsActivity : AppCompatActivity() {
         Toast.makeText(this, "Package deals feature under development", Toast.LENGTH_SHORT).show()
     }
 
-    private fun generateMockFlights(): List<Flight> {
-        return listOf(
-            Flight("Emirates", "10:30 AM", "JFK", "7:00 PM", "CDG", "8h 30m", "Non-stop", "$850", "Economy", "5 seats left"),
-            Flight("Air France", "2:15 PM", "JFK", "4:45 AM +1", "CDG", "7h 30m", "Non-stop", "$920", "Economy", "12 seats left"),
-            Flight("Delta", "8:45 PM", "JFK", "10:15 AM +1", "CDG", "8h 30m", "Non-stop", "$1,050", "Economy", "8 seats left"),
-            Flight("United Airlines", "6:00 AM", "JFK", "8:30 PM", "CDG", "9h 30m", "1 stop", "$680", "Economy", "15 seats left"),
-            Flight("British Airways", "11:20 AM", "JFK", "12:50 AM +1", "CDG", "10h 30m", "1 stop (LHR)", "$720", "Economy", "10 seats left"),
-            Flight("Lufthansa", "4:30 PM", "JFK", "7:15 AM +1", "CDG", "11h 45m", "1 stop (FRA)", "$650", "Economy", "20 seats left"),
-            Flight("KLM", "9:15 AM", "JFK", "11:45 PM", "CDG", "9h 30m", "1 stop (AMS)", "$695", "Economy", "18 seats left"),
-            Flight("Swiss Air", "1:00 PM", "JFK", "4:30 AM +1", "CDG", "12h 30m", "1 stop (ZRH)", "$710", "Economy", "7 seats left"),
-            Flight("Turkish Airlines", "5:45 PM", "JFK", "3:15 PM +1", "CDG", "16h 30m", "1 stop (IST)", "$590", "Economy", "25 seats left"),
-            Flight("Iberia", "7:30 AM", "JFK", "10:00 PM", "CDG", "11h 30m", "1 stop (MAD)", "$640", "Economy", "14 seats left")
-        )
+    // Add this function to show flight details
+    private fun showFlightDetails(flight: FlightOffer) {
+        val details = flight.getCompleteItinerary()
+        val detailText = details.joinToString("\n")
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Flight Details")
+            .setMessage(detailText)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
     }
+
+    // Add this: Mapping function from HotelOffer to your mock Hotel class
+    private fun mapToHotel(offer: HotelOffer): Hotel {
+        val hotelInfo = offer.hotel
+        val firstOffer = offer.offers?.firstOrNull()
+
+        val name = hotelInfo?.name ?: "Unknown Hotel"
+        val rating = hotelInfo?.rating?.let { "⭐".repeat(it) } ?: "⭐⭐⭐"
+        val reviews = "(4.5/5 - 150 reviews)" // Default since Amadeus doesn't provide review count
+        val location = hotelInfo?.address?.let { addr ->
+            "📍 ${addr.cityName ?: "Unknown City"}, ${addr.lines?.firstOrNull() ?: ""}"
+        } ?: "📍 Location not available"
+        val amenities = "WiFi • Breakfast • Pool" // Default amenities
+        val price = firstOffer?.price?.total?.let { "$$it/night" } ?: "Price not available"
+        val availability = "Available" // Default availability
+
+        return Hotel(name, rating, reviews, location, amenities, price, availability)
+    }
+
 
     private fun generateMockHotels(): List<Hotel> {
         return listOf(
@@ -232,12 +222,7 @@ class ResultsActivity : AppCompatActivity() {
             Hotel("Hotel de la Place", "⭐⭐⭐⭐", "(4.5/5 - 180 reviews)", "📍 Latin Quarter, 0.3km to Notre-Dame", "WiFi • Breakfast • Bar", "$120/night", "5 rooms left"),
             Hotel("Paris Luxury Suites", "⭐⭐⭐⭐⭐", "(4.9/5 - 450 reviews)", "📍 Opera District, 0.1km to Galeries Lafayette", "WiFi • Pool • Restaurant • Concierge", "$320/night", "1 room left"),
             Hotel("Montmartre Inn", "⭐⭐⭐", "(4.2/5 - 95 reviews)", "📍 Montmartre, 0.5km to Sacré-Cœur", "WiFi • Breakfast", "$85/night", "8 rooms left"),
-            Hotel("Riverside Hotel Paris", "⭐⭐⭐⭐", "(4.6/5 - 220 reviews)", "📍 Seine Riverbank, 0.4km to Eiffel Tower", "WiFi • River View • Restaurant", "$180/night", "4 rooms left"),
-            Hotel("Budget Stay Paris", "⭐⭐", "(3.8/5 - 60 reviews)", "📍 Outer District, 2km to city center", "WiFi • Kitchen", "$55/night", "12 rooms left"),
-            Hotel("Boutique Hotel Marais", "⭐⭐⭐⭐", "(4.7/5 - 155 reviews)", "📍 Le Marais, 0.3km to Place des Vosges", "WiFi • Breakfast • Garden", "$145/night", "3 rooms left"),
-            Hotel("Palace de Paris", "⭐⭐⭐⭐⭐", "(4.9/5 - 580 reviews)", "📍 1st Arrondissement, 0.1km to Louvre", "WiFi • Pool • Spa • Fine Dining • Butler", "$450/night", "2 rooms left"),
-            Hotel("Cozy Corner Hotel", "⭐⭐⭐", "(4.0/5 - 75 reviews)", "📍 Belleville, 1.5km to attractions", "WiFi • Breakfast", "$70/night", "10 rooms left"),
-            Hotel("Eiffel View Hotel", "⭐⭐⭐⭐", "(4.4/5 - 200 reviews)", "📍 Trocadéro, 0.3km to Eiffel Tower", "WiFi • Breakfast • Terrace", "$165/night", "6 rooms left")
+            Hotel("Riverside Hotel Paris", "⭐⭐⭐⭐", "(4.6/5 - 220 reviews)", "📍 Seine Riverbank, 0.4km to Eiffel Tower", "WiFi • River View • Restaurant", "$180/night", "4 rooms left")
         )
     }
 }

@@ -66,24 +66,50 @@ data class AmadeusError(
 
 @Serializable
 data class FlightOffer(
-    val id: String?,
-    val source: String?,
-    val price: Price?,
-    val itineraries: List<Itinerary>?
+    @SerialName("id") val id: String,
+    @SerialName("source") val source: String? = null,
+    @SerialName("price") val price: Price? = null,
+    @SerialName("itineraries") val itineraries: List<Itinerary>? = null,
+    @SerialName("validatingAirlineCodes") val validatingAirlineCodes: List<String>? = null,
+    @SerialName("numberOfBookableSeats") val numberOfBookableSeats: Int? = null
 )
+
 @Serializable
-data class Price(val total: String?)
+data class Price(
+    val currency: String?,
+    val total: String?,
+    val base: String?,
+    val grandTotal: String?
+)
+
 @Serializable
-data class Itinerary(val segments: List<Segment>?)
+data class Itinerary(
+    @SerialName("duration") val duration: String? = null,
+    @SerialName("segments") val segments: List<Segment>? = null
+)
+
 @Serializable
 data class Segment(
-    val departure: Airport?,
-    val arrival: Airport?,
-    val carrierCode: String?,
-    val number: String?
+    @SerialName("departure") val departure: AirportInfo? = null,
+    @SerialName("arrival") val arrival: AirportInfo? = null,
+    @SerialName("carrierCode") val carrierCode: String? = null,
+    @SerialName("number") val number: String? = null,
+    @SerialName("aircraft") val aircraft: Aircraft? = null,
+    @SerialName("operating") val operating: Operating? = null,
+    @SerialName("duration") val duration: String? = null
 )
 @Serializable
-data class Airport(val iataCode: String?, val at: String?)  // "at" is datetime
+data class AirportInfo(
+    @SerialName("iataCode") val iataCode: String? = null,
+    @SerialName("terminal") val terminal: String? = null,
+    @SerialName("at") val at: String? = null
+)
+
+@Serializable
+data class Aircraft(@SerialName("code") val code: String? = null)
+
+@Serializable
+data class Operating(@SerialName("carrierCode") val carrierCode: String? = null)
 
 // Hotel Request
 @Serializable
@@ -186,4 +212,68 @@ data class HotelPolicies(
 data class HotelCancellation(
     val type: String?,
     val amount: String?
+)
+
+// Airport Data Models
+@Serializable
+data class AirportResponse(
+    @SerialName("data") val data: List<AirportData>? = null,
+    @SerialName("meta") val meta: Meta? = null
+)
+
+@Serializable
+data class AirportData(
+    @SerialName("type") val type: String? = null,
+    @SerialName("subType") val subType: String? = null,
+    @SerialName("name") val name: String? = null,
+    @SerialName("detailedName") val detailedName: String? = null,
+    @SerialName("id") val id: String? = null,
+    @SerialName("self") val self: AirportSelf? = null,
+    @SerialName("timeZoneOffset") val timeZoneOffset: String? = null,
+    @SerialName("iataCode") val iataCode: String? = null,
+    @SerialName("geoCode") val geoCode: GeoCode? = null,
+    @SerialName("address") val address: AirportAddress? = null,
+    @SerialName("analytics") val analytics: Analytics? = null
+)
+
+@Serializable
+data class AirportSelf(
+    @SerialName("href") val href: String? = null,
+    @SerialName("methods") val methods: List<String>? = null
+)
+
+@Serializable
+data class GeoCode(
+    @SerialName("latitude") val latitude: Double? = null,
+    @SerialName("longitude") val longitude: Double? = null
+)
+
+@Serializable
+data class AirportAddress(
+    @SerialName("cityName") val cityName: String? = null,
+    @SerialName("cityCode") val cityCode: String? = null,
+    @SerialName("countryName") val countryName: String? = null,
+    @SerialName("countryCode") val countryCode: String? = null,
+    @SerialName("regionCode") val regionCode: String? = null
+)
+
+@Serializable
+data class Analytics(
+    @SerialName("travelers") val travelers: Travelers? = null
+)
+
+@Serializable
+data class Travelers(
+    @SerialName("score") val score: Int? = null
+)
+
+@Serializable
+data class Meta(
+    @SerialName("count") val count: Int? = null,
+    @SerialName("links") val links: MetaLinks? = null
+)
+
+@Serializable
+data class MetaLinks(
+    @SerialName("self") val self: String? = null
 )

@@ -321,7 +321,7 @@ class MainActivity : AppCompatActivity() {
     private suspend fun getFlightSearchData(sd: SearchData): FlightResponse? {
         Log.d("MainActivity", "=== ATTEMPTING TO GET FLIGHT DATA ===")
         Log.d("MainActivity", "Search data: from=${sd.fromLocation}, to=${sd.toLocation}")
-        
+
         val token = withContext(Dispatchers.IO) {
             Log.d("MainActivity", "Calling getAmadeusAccessToken()...")
             val result = apiService.getAmadeusAccessToken()
@@ -332,42 +332,55 @@ class MainActivity : AppCompatActivity() {
         if (token == null) {
             Log.e("MainActivity", "=== TOKEN IS NULL - USING MOCK DATA ===")
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "Using mock flight data (API unavailable)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    "Using mock flight data (API unavailable)",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-            return apiService.createMockFlightResponse()
         }
-        
+
         Log.d("MainActivity", "=== TOKEN SUCCESS - PROCEEDING WITH API CALLS ===")
 
         val auth = "Bearer $token"
         val depDateStr = apiDateFormat.format(sd.departureDate?.time ?: return null)
         val retDateStr = apiDateFormat.format(sd.returnDate?.time ?: return null)
-        val (adults, children) = adultCount to childCount
+        val adults = adultCount
 
-        val originCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.fromLocation) }
-        val destCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.toLocation) }
+        // ✅ CHANGED: Use airport code lookup instead of city code
+        val originCode = withContext(Dispatchers.IO) {
+            apiService.getAirportCode(auth, sd.fromLocation)
+        }
+        val destCode = withContext(Dispatchers.IO) {
+            apiService.getAirportCode(auth, sd.toLocation)
+        }
+
+        Log.d("MainActivity", "📍 Airport codes - Origin: $originCode, Destination: $destCode")
 
         if (originCode == null || destCode == null) {
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "Invalid locations.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity,
+                    "Could not find airport codes for: ${sd.fromLocation} or ${sd.toLocation}",
+                    Toast.LENGTH_LONG
+                ).show()
             }
             return null
         }
 
-        val travelers = mutableListOf<Traveler>()
-        repeat(adults) { travelers.add(Traveler("${it + 1}", "ADULT")) }
-        repeat(children) { travelers.add(Traveler("${adults + it + 1}", "CHILD")) }
+        val response = withContext(Dispatchers.IO) {
+            apiService.getFlightOffers(auth, originCode, destCode, depDateStr, retDateStr, adults)
+        }
 
-        val request = FlightSearchRequest(
-            originDestinations = listOf(
-                OriginDestination("1", originCode, destCode, DateTimeRange(depDateStr)),
-                OriginDestination("2", destCode, originCode, DateTimeRange(retDateStr))
-            ),
-            travelers = travelers,
-            sources = listOf("GDS")
-        )
-
-        val response = withContext(Dispatchers.IO) { apiService.getFlightOffers(auth, request) }
+        // ✅ ADDED: Log the flight response
+        Log.d("MainActivity", "=== FLIGHT SEARCH RESPONSE ===")
+        if (response != null) {
+            Log.d("MainActivity", "✅ SUCCESS - Found ${response.data?.size ?: 0} flights")
+            response.data?.take(2)?.forEachIndexed { index, flight ->
+                Log.d("MainActivity", "Flight ${index + 1}: ${flight.price?.currency} ${flight.price?.total}")
+            }
+        } else {
+            Log.d("MainActivity", "❌ FAILED - No flight response")
+        }
 
         if (response == null || response.data == null) {
             withContext(Dispatchers.Main) {
