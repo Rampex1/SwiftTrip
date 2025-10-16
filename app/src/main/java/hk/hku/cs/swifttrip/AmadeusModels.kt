@@ -84,3 +84,106 @@ data class Segment(
 )
 @Serializable
 data class Airport(val iataCode: String?, val at: String?)  // "at" is datetime
+
+// Hotel Request
+@Serializable
+data class HotelSearchRequest(
+    val cityCode: String,
+    val checkInDate: String,
+    val checkOutDate: String,
+    val roomQuantity: Int = 1,
+    val adults: Int = 1,
+    val currencyCode: String = "USD"
+)
+
+// Hotel Response
+@Serializable
+data class HotelResponse(
+    val data: List<HotelOffer>?,
+    val errors: List<AmadeusError>? = null
+)
+
+@Serializable
+data class HotelOffer(
+    val type: String?,
+    val hotel: HotelInfo?,
+    val offers: List<HotelOfferDetail>?
+)
+
+@Serializable
+data class HotelInfo(
+    val hotelId: String?,
+    val name: String?,
+    val rating: Int?,
+    val contact: HotelContact?,
+    val address: HotelAddress?
+)
+
+@Serializable
+data class HotelContact(
+    val phone: String?,
+    val fax: String?
+)
+
+@Serializable
+data class HotelAddress(
+    val lines: List<String>?,
+    val cityName: String?,
+    val countryCode: String?,
+    val postalCode: String?
+)
+
+@Serializable
+data class HotelOfferDetail(
+    val id: String?,
+    val checkInDate: String?,
+    val checkOutDate: String?,
+    val room: HotelRoom?,
+    val guests: HotelGuests?,
+    val price: HotelPrice?,
+    val policies: HotelPolicies?
+)
+
+@Serializable
+data class HotelRoom(
+    val type: String?,
+    val typeEstimated: HotelRoomType?
+)
+
+@Serializable
+data class HotelRoomType(
+    val category: String?,
+    val beds: Int?,
+    val bedType: String?
+)
+
+@Serializable
+data class HotelGuests(
+    val adults: Int?
+)
+
+@Serializable
+data class HotelPrice(
+    val currency: String?,
+    val total: String?,
+    val base: String?,
+    val taxes: List<HotelTax>?
+)
+
+@Serializable
+data class HotelTax(
+    val code: String?,
+    val amount: String?
+)
+
+@Serializable
+data class HotelPolicies(
+    val paymentType: String?,
+    val cancellation: HotelCancellation?
+)
+
+@Serializable
+data class HotelCancellation(
+    val type: String?,
+    val amount: String?
+)

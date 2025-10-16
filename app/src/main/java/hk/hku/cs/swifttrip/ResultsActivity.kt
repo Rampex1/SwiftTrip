@@ -1,6 +1,7 @@
 package hk.hku.cs.swifttrip
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -29,18 +30,30 @@ class ResultsActivity : AppCompatActivity() {
 
     private var currentTab = 0 // 0 = Flights, 1 = Hotels, 2 = Packages
 
-    // Add this: Store the parsed flight response
+    // Add this: Store the parsed flight and hotel responses
     private var flightResponse: FlightResponse? = null
+    private var hotelResponse: HotelResponse? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
 
-        // Add this: Parse the flight JSON extra early
+        // Add this: Parse the flight and hotel JSON extras early
         val flightJson = intent.getStringExtra("flightResponseJson")
         flightResponse = if (flightJson != null) {
             try {
                 Gson().fromJson(flightJson, FlightResponse::class.java)
+            } catch (e: Exception) {
+                null  // Handle deserialization failure
+            }
+        } else {
+            null
+        }
+
+        val hotelJson = intent.getStringExtra("hotelResponseJson")
+        hotelResponse = if (hotelJson != null) {
+            try {
+                Gson().fromJson(hotelJson, HotelResponse::class.java)
             } catch (e: Exception) {
                 null  // Handle deserialization failure
             }
@@ -125,14 +138,13 @@ class ResultsActivity : AppCompatActivity() {
     private fun loadFlightResults() {
         val flights: List<Flight> = if (flightResponse?.data?.isNotEmpty() == true) {
             // Use real data: Map FlightOffer to Flight
+            Log.d("ResultsActivity", "Using real flight data: ${flightResponse!!.data!!.size} offers")
             flightResponse!!.data!!.map { offer ->
                 mapToFlight(offer)
             }
         } else {
             // Fallback to mocks if no real data
-            if (flightResponse == null) {
-                Toast.makeText(this, "No flight data received; using mocks", Toast.LENGTH_SHORT).show()
-            }
+            Log.d("ResultsActivity", "Using mock flight data")
             generateMockFlights()
         }
 
@@ -158,8 +170,37 @@ class ResultsActivity : AppCompatActivity() {
         return Flight(airline, depTime, depAirport, arrTime, arrAirport, duration, "", price, flightClass, availability)
     }
 
+    // Add this: Mapping function from HotelOffer to your mock Hotel class
+    private fun mapToHotel(offer: HotelOffer): Hotel {
+        val hotelInfo = offer.hotel
+        val firstOffer = offer.offers?.firstOrNull()
+        
+        val name = hotelInfo?.name ?: "Unknown Hotel"
+        val rating = hotelInfo?.rating?.let { "⭐".repeat(it) } ?: "⭐⭐⭐"
+        val reviews = "(4.5/5 - 150 reviews)" // Default since Amadeus doesn't provide review count
+        val location = hotelInfo?.address?.let { addr ->
+            "📍 ${addr.cityName ?: "Unknown City"}, ${addr.lines?.firstOrNull() ?: ""}"
+        } ?: "📍 Location not available"
+        val amenities = "WiFi • Breakfast • Pool" // Default amenities
+        val price = firstOffer?.price?.total?.let { "$$it/night" } ?: "Price not available"
+        val availability = "Available" // Default availability
+        
+        return Hotel(name, rating, reviews, location, amenities, price, availability)
+    }
+
     private fun loadHotelResults() {
-        val hotels = generateMockHotels()
+        val hotels: List<Hotel> = if (hotelResponse?.data?.isNotEmpty() == true) {
+            // Use real data: Map HotelOffer to Hotel
+            Log.d("ResultsActivity", "Using real hotel data: ${hotelResponse!!.data!!.size} offers")
+            hotelResponse!!.data!!.map { offer ->
+                mapToHotel(offer)
+            }
+        } else {
+            // Fallback to mocks if no real data
+            Log.d("ResultsActivity", "Using mock hotel data")
+            generateMockHotels()
+        }
+
         resultsCountText.text = "${hotels.size} hotels found"
         resultsRecyclerView.adapter = HotelAdapter(hotels)
     }

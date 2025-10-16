@@ -4,6 +4,7 @@ import android.app.DatePickerDialog
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.TextView
@@ -280,17 +281,29 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Searching for flights and hotels...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
-            val response = getFlightSearchData(searchData)
+            // Show network status
+            Toast.makeText(this@MainActivity, "Checking network connectivity...", Toast.LENGTH_SHORT).show()
+            
+            // Fetch both flights and hotels in parallel
+            val flightResponse = getFlightSearchData(searchData)
+            val hotelResponse = getHotelSearchData(searchData)
+            
             searchButton.isEnabled = true
             searchButton.text = "Search Flights & Hotels"
+            
+            // If both API calls failed, show a message but still navigate with mock data
+            if (flightResponse == null && hotelResponse == null) {
+                Toast.makeText(this@MainActivity, "Network unavailable - showing sample results", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(this@MainActivity, "Search completed successfully", Toast.LENGTH_SHORT).show()
+            }
+            
             // Navigate to results activity
-            showSearchResults(searchData, response)
+            showSearchResults(searchData, flightResponse, hotelResponse)
         }
-
-        // TODO: Implement API calls to hotel services as well, then pass as response to showSearchResults
     }
 
-    private fun showSearchResults(searchData: SearchData, flightResponse: FlightResponse?) {
+    private fun showSearchResults(searchData: SearchData, flightResponse: FlightResponse?, hotelResponse: HotelResponse?) {
         // Navigate to ResultsActivity
         val intent = Intent(this, ResultsActivity::class.java)
         intent.putExtra("fromLocation", searchData.fromLocation)
@@ -300,20 +313,31 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra("passengers", searchData.passengers)
         // Pass flight response as JSON string extra (using Gson for serialization)
         intent.putExtra("flightResponseJson", Gson().toJson(flightResponse))
+        // Pass hotel response as JSON string extra
+        intent.putExtra("hotelResponseJson", Gson().toJson(hotelResponse))
         startActivity(intent)
     }
 
     private suspend fun getFlightSearchData(sd: SearchData): FlightResponse? {
+        Log.d("MainActivity", "=== ATTEMPTING TO GET FLIGHT DATA ===")
+        Log.d("MainActivity", "Search data: from=${sd.fromLocation}, to=${sd.toLocation}")
+        
         val token = withContext(Dispatchers.IO) {
-            apiService.getAmadeusAccessToken()
+            Log.d("MainActivity", "Calling getAmadeusAccessToken()...")
+            val result = apiService.getAmadeusAccessToken()
+            Log.d("MainActivity", "Token result: ${if (result != null) "SUCCESS (${result.take(10)}...)" else "NULL"}")
+            result
         }
 
         if (token == null) {
+            Log.e("MainActivity", "=== TOKEN IS NULL - USING MOCK DATA ===")
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity, "Failed to fetch access token.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "Using mock flight data (API unavailable)", Toast.LENGTH_SHORT).show()
             }
-            return null
+            return apiService.createMockFlightResponse()
         }
+        
+        Log.d("MainActivity", "=== TOKEN SUCCESS - PROCEEDING WITH API CALLS ===")
 
         val auth = "Bearer $token"
         val depDateStr = apiDateFormat.format(sd.departureDate?.time ?: return null)
@@ -352,6 +376,46 @@ class MainActivity : AppCompatActivity() {
                 } else {
                     Toast.makeText(this@MainActivity, "No flights found for this route/dates.", Toast.LENGTH_SHORT).show()
                 }
+            }
+            return null
+        }
+
+        return response
+    }
+
+    private suspend fun getHotelSearchData(sd: SearchData): HotelResponse? {
+        val token = withContext(Dispatchers.IO) {
+            apiService.getAmadeusAccessToken()
+        }
+
+        if (token == null) {
+            Log.e("MainActivity", "Failed to fetch access token, returning mock hotel data")
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "Using mock hotel data (API unavailable)", Toast.LENGTH_SHORT).show()
+            }
+            return apiService.createMockHotelResponse()
+        }
+
+        val auth = "Bearer $token"
+        val checkInDate = apiDateFormat.format(sd.departureDate?.time ?: return null)
+        val checkOutDate = apiDateFormat.format(sd.returnDate?.time ?: return null)
+        val adults = adultCount
+
+        val destCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.toLocation) }
+
+        if (destCode == null) {
+            return null
+        }
+
+        val response = withContext(Dispatchers.IO) { 
+            apiService.getHotelOffers(auth, destCode, checkInDate, checkOutDate, adults) 
+        }
+
+        if (response == null || response.data == null) {
+            if (response == null) {
+                Log.e("MainActivity", "Hotel search failed")
+            } else {
+                Log.e("MainActivity", "No hotels found for this destination/dates")
             }
             return null
         }
