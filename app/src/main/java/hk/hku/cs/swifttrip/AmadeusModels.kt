@@ -122,98 +122,6 @@ data class HotelSearchRequest(
     val currencyCode: String = "USD"
 )
 
-// Hotel Response
-@Serializable
-data class HotelResponse(
-    val data: List<HotelOffer>?,
-    val errors: List<AmadeusError>? = null
-)
-
-@Serializable
-data class HotelOffer(
-    val type: String?,
-    val hotel: HotelInfo?,
-    val offers: List<HotelOfferDetail>?
-)
-
-@Serializable
-data class HotelInfo(
-    val hotelId: String?,
-    val name: String?,
-    val rating: Int?,
-    val contact: HotelContact?,
-    val address: HotelAddress?
-)
-
-@Serializable
-data class HotelContact(
-    val phone: String?,
-    val fax: String?
-)
-
-@Serializable
-data class HotelAddress(
-    val lines: List<String>?,
-    val cityName: String?,
-    val countryCode: String?,
-    val postalCode: String?
-)
-
-@Serializable
-data class HotelOfferDetail(
-    val id: String?,
-    val checkInDate: String?,
-    val checkOutDate: String?,
-    val room: HotelRoom?,
-    val guests: HotelGuests?,
-    val price: HotelPrice?,
-    val policies: HotelPolicies?
-)
-
-@Serializable
-data class HotelRoom(
-    val type: String?,
-    val typeEstimated: HotelRoomType?
-)
-
-@Serializable
-data class HotelRoomType(
-    val category: String?,
-    val beds: Int?,
-    val bedType: String?
-)
-
-@Serializable
-data class HotelGuests(
-    val adults: Int?
-)
-
-@Serializable
-data class HotelPrice(
-    val currency: String?,
-    val total: String?,
-    val base: String?,
-    val taxes: List<HotelTax>?
-)
-
-@Serializable
-data class HotelTax(
-    val code: String?,
-    val amount: String?
-)
-
-@Serializable
-data class HotelPolicies(
-    val paymentType: String?,
-    val cancellation: HotelCancellation?
-)
-
-@Serializable
-data class HotelCancellation(
-    val type: String?,
-    val amount: String?
-)
-
 // Airport Data Models
 @Serializable
 data class AirportResponse(
@@ -268,12 +176,154 @@ data class Travelers(
 )
 
 @Serializable
-data class Meta(
-    @SerialName("count") val count: Int? = null,
-    @SerialName("links") val links: MetaLinks? = null
+data class MetaLinks(
+    @SerialName("self") val self: String? = null
 )
 
 @Serializable
-data class MetaLinks(
+data class HotelResponse(
+    @SerialName("data") val data: List<HotelOffer>? = null
+)
+
+@Serializable
+data class HotelOffer(
+    @SerialName("type") val type: String? = null,
+    @SerialName("hotel") val hotel: HotelInfo? = null,
+    @SerialName("offers") val offers: List<HotelOfferDetail>? = null,
+    @SerialName("available") val available: Boolean? = null
+)
+
+@Serializable
+data class HotelInfo(
+    @SerialName("hotelId") val hotelId: String? = null,
+    @SerialName("name") val name: String? = null,
+    @SerialName("rating") val rating: Int? = null,
+    @SerialName("contact") val contact: HotelContact? = null,  // Add this
+    @SerialName("address") val address: HotelAddress? = null
+)
+
+@Serializable
+data class HotelContact(
+    @SerialName("phone") val phone: String? = null,
+    @SerialName("email") val email: String? = null
+)
+
+@Serializable
+data class HotelAddress(
+    @SerialName("lines") val lines: List<String>? = null,
+    @SerialName("cityName") val cityName: String? = null,
+    @SerialName("countryCode") val countryCode: String? = null,
+    @SerialName("postalCode") val postalCode: String? = null
+)
+
+@Serializable
+data class HotelOfferDetail(
+    @SerialName("id") val id: String? = null,
+    @SerialName("checkInDate") val checkInDate: String? = null,
+    @SerialName("checkOutDate") val checkOutDate: String? = null,
+    @SerialName("room") val room: HotelRoom? = null,
+    @SerialName("guests") val guests: HotelGuests? = null,
+    @SerialName("price") val price: HotelPrice? = null,
+    @SerialName("policies") val policies: HotelPolicies? = null
+)
+
+@Serializable
+data class HotelRoom(
+    @SerialName("type") val type: String? = null,
+    @SerialName("typeEstimated") val typeEstimated: HotelRoomType? = null
+)
+
+@Serializable
+data class HotelRoomType(
+    @SerialName("category") val category: String? = null,
+    @SerialName("beds") val beds: Int? = null,
+    @SerialName("bedType") val bedType: String? = null
+)
+
+@Serializable
+data class HotelGuests(
+    @SerialName("adults") val adults: Int? = null
+)
+
+@Serializable
+data class HotelPrice(
+    @SerialName("currency") val currency: String? = null,
+    @SerialName("total") val total: String? = null,
+    @SerialName("base") val base: String? = null,
+    @SerialName("taxes") val taxes: List<HotelTax>? = null
+)
+
+@Serializable
+data class HotelTax(
+    @SerialName("amount") val amount: String? = null,
+    @SerialName("code") val code: String? = null
+)
+
+@Serializable
+data class HotelPolicies(
+    @SerialName("paymentType") val paymentType: String? = null,
+    @SerialName("cancellation") val cancellation: HotelCancellation? = null
+)
+
+@Serializable
+data class HotelCancellation(
+    @SerialName("type") val type: String? = null,
+    @SerialName("amount") val amount: String? = null
+)
+
+@Serializable
+data class HotelListResponse(
+    @SerialName("data") val data: List<HotelListItem>? = null,
+    @SerialName("meta") val meta: HotelListMeta? = null
+)
+
+@Serializable
+data class HotelListItem(
+    @SerialName("type") val type: String? = null,
+    @SerialName("hotelId") val hotelId: String? = null,
+    @SerialName("chainCode") val chainCode: String? = null,
+    @SerialName("iataCode") val iataCode: String? = null,
+    @SerialName("dupeId") val dupeId: Long? = null,  // Change from String to Long
+    @SerialName("name") val name: String? = null,
+    @SerialName("rating") val rating: String? = null,
+    @SerialName("cityCode") val cityCode: String? = null,
+    @SerialName("geoCode") val geoCode: HotelGeoCode? = null,
+    @SerialName("address") val address: HotelAddress? = null,
+    @SerialName("contact") val contact: HotelContact? = null,
+    @SerialName("distance") val distance: HotelDistance? = null,
+    @SerialName("lastUpdate") val lastUpdate: String? = null
+)
+
+@Serializable
+data class HotelListMeta(
+    @SerialName("count") val count: Int? = null,
+    @SerialName("links") val links: HotelListLinks? = null
+)
+
+@Serializable
+data class HotelListLinks(
+    @SerialName("self") val self: String? = null
+)
+
+@Serializable
+data class HotelGeoCode(
+    @SerialName("latitude") val latitude: Double? = null,
+    @SerialName("longitude") val longitude: Double? = null
+)
+
+@Serializable
+data class HotelDistance(
+    @SerialName("value") val value: Double? = null,
+    @SerialName("unit") val unit: String? = null
+)
+
+@Serializable
+data class Meta(
+    @SerialName("count") val count: Int? = null,
+    @SerialName("links") val links: Links? = null
+)
+
+@Serializable
+data class Links(
     @SerialName("self") val self: String? = null
 )
