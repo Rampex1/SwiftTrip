@@ -7,7 +7,7 @@
 SwiftTrip simplifies the travel booking process by consolidating flight and hotel searches into a single, intuitive platform. No more juggling multiple tabs or wondering if you got the best deal—SwiftTrip finds the perfect combination for your getaway.
 
 ### The Problem
-Travelers waste hours jumping between multiple websites, comparing flights, hotels, and packages. The process is exhausting, especially for busy students and frequent travelers who want to optimize their travel plans without the hassle.
+Travelers waste hours jumping between multiple websites, comparing flights, hotels. The process is exhausting, especially for busy students and frequent travelers who want to optimize their travel plans without the hassle.
 
 ### Our Solution
 A unified mobile platform that:
@@ -44,7 +44,7 @@ A unified mobile platform that:
 
 - 🎯 **User Experience**
     - Clean, modern Material Design interface
-    - Intuitive navigation with tabs (Flights, Hotels, Packages)
+    - Intuitive navigation with tabs (Flights, Hotels)
     - Sort and filter buttons 
     - Responsive layouts
     - Loading states and error handling

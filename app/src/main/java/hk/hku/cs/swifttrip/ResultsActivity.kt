@@ -33,7 +33,7 @@ class ResultsActivity : AppCompatActivity() {
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
-    private var currentTab = 0 // 0 = Flights, 1 = Hotels, 2 = Packages
+    private var currentTab = 0 // 0 = Flights, 1 = Hotels
 
     // Store the parsed responses
     private var flightResponse: FlightResponse? = null
