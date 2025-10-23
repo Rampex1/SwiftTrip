@@ -44,13 +44,13 @@
 
                     <TextView
                         android:id="@+id/routeText"
-                        android:layout_width="0dp"
+                        android:layout_width="265dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="New York → Paris"
+                        android:textColor="@color/text_primary"
                         android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/text_primary" />
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/passengersText"
@@ -61,7 +61,6 @@
                         android:textColor="@color/text_secondary" />
 
                 </LinearLayout>
-
                 <TextView
                     android:id="@+id/datesText"
                     android:layout_width="wrap_content"
@@ -70,6 +69,19 @@
                     android:text="Jan 15 - Jan 22, 2024"
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary" />
+                    <com.google.android.material.button.MaterialButton
+                        android:layout_marginTop="4dp"
+                        android:id="@+id/visaButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:text="Check Visa Requirements"
+                        android:textSize="18sp"
+                        android:backgroundTint="@color/primary_blue"
+                        app:cornerRadius="28dp"
+                        app:icon="@drawable/ic_passport"
+                        app:iconGravity="textStart"
+                        app:iconPadding="8dp"
+                        style="@style/Widget.MaterialComponents.Button" />
 
             </LinearLayout>
 

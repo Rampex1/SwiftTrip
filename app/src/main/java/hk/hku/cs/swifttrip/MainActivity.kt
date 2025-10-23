@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toLocationEdit: TextInputEditText
     private lateinit var departureDateEdit: TextInputEditText
     private lateinit var returnDateEdit: TextInputEditText
-    private lateinit var passengersDropdown: AutoCompleteTextView
+
     private lateinit var searchButton: MaterialButton
     private lateinit var adultPlusButton: MaterialButton
     private lateinit var adultMinusButton: MaterialButton
@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         setupDatePickers()
         setupSearchButton()
         calculatePassengers()
+
     }
     private fun initializeViews() {
         fromLocationEdit = findViewById(R.id.fromLocationEdit)
@@ -90,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         searchButton = findViewById(R.id.searchButton)
 
     }
+
 
 
 

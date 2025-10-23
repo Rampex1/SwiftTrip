@@ -10,6 +10,8 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.LogLevel
@@ -114,6 +116,7 @@ class ApiService {
             null
         }
     }
+
 
     suspend fun getFlightOffers(auth: String, originCode: String, destCode: String, depDateStr: String, retDateStr: String, adults: Int): FlightResponse? {
         return try {

@@ -1,5 +1,6 @@
 package hk.hku.cs.swifttrip
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
@@ -25,6 +26,7 @@ class ResultsActivity : AppCompatActivity() {
     private lateinit var resultsRecyclerView: RecyclerView
     private lateinit var sortButton: MaterialButton
     private lateinit var filterButton: MaterialButton
+    private lateinit var visaButton: MaterialButton
 
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
@@ -69,7 +71,10 @@ class ResultsActivity : AppCompatActivity() {
         setupTabs()
         setupButtons()
         loadFlightResults()
+        setupVisaButton()
     }
+
+
 
     private fun initializeViews() {
         toolbar = findViewById(R.id.toolbar)
@@ -81,6 +86,7 @@ class ResultsActivity : AppCompatActivity() {
         resultsRecyclerView = findViewById(R.id.resultsRecyclerView)
         sortButton = findViewById(R.id.sortButton)
         filterButton = findViewById(R.id.filterButton)
+        visaButton = findViewById(R.id.visaButton)
 
         resultsRecyclerView.layoutManager = LinearLayoutManager(this)
     }
@@ -110,7 +116,16 @@ class ResultsActivity : AppCompatActivity() {
 
         passengersText.text = passengers
     }
+    private fun setupVisaButton(){
+        visaButton.setOnClickListener {
+            val fromLocation = intent.getStringExtra("fromLocation") ?: "New York"
+            val toLocation = intent.getStringExtra("toLocation") ?: "Paris"
+            val intent = Intent(this, VisaActivity::class.java)
+            intent.putExtra("fromLocation", fromLocation)
+            intent.putExtra("toLocation", toLocation)
 
+            startActivity(intent) }
+    }
     private fun setupTabs() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
