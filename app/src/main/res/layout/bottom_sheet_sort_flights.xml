@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sort Flights By"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/sortFlightRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/sortPriceLowToHigh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price: Low to High"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortPriceHighToLow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price: High to Low"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortDurationShortest"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Duration: Shortest First"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortDepartureMorning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Departure: Morning First"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortArrivalMorning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Arrival: Morning First"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+    </RadioGroup>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/applySortButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:text="Apply"
+        android:textSize="16sp"
+        android:backgroundTint="@color/primary_blue" />
+
+</LinearLayout>

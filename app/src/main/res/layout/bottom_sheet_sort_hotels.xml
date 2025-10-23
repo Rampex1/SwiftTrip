@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sort Hotels By"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/sortHotelRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/sortHotelPriceLowToHigh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price: Low to High"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortHotelPriceHighToLow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Price: High to Low"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortHotelRating"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rating: High to Low"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+        <RadioButton
+            android:id="@+id/sortHotelName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Name: A to Z"
+            android:textSize="16sp"
+            android:padding="12dp" />
+
+    </RadioGroup>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/applyHotelSortButton"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:text="Apply"
+        android:textSize="16sp"
+        android:backgroundTint="@color/primary_blue" />
+
+</LinearLayout>

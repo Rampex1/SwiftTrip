@@ -173,27 +173,64 @@ class ApiService {
 
     suspend fun getHotelOffers(auth: String, cityCode: String, checkInDate: String, checkOutDate: String, adults: Int = 1): HotelResponse? {
         return try {
-            Log.d("ApiService", "Searching hotels in $cityCode from $checkInDate to $checkOutDate for $adults adults")
-            // Try the hotel list API first to get available hotels
+            Log.d("ApiService", "🏨 Simple hotel search in $cityCode")
+
             val hotelListResponse = client.get("v1/reference-data/locations/hotels/by-city") {
                 header("Authorization", auth)
                 parameter("cityCode", cityCode)
+                parameter("radius", 5)
+                parameter("radiusUnit", "KM")
             }
-            Log.d("ApiService", "Hotel list API response status: ${hotelListResponse.status}")
-            
+
+            Log.d("ApiService", "📡 Hotel API response status: ${hotelListResponse.status}")
+
             if (hotelListResponse.status.value != 200) {
-                val errorBody = hotelListResponse.bodyAsText()
-                Log.e("ApiService", "Hotel list failed with status ${hotelListResponse.status}: $errorBody")
+                Log.e("ApiService", "❌ Hotel API failed: ${hotelListResponse.status}")
                 return null
             }
-            
-            // For now, return a mock response since the hotel offers API might not be available
-            // or might require different parameters
-            Log.d("ApiService", "Hotel list successful, returning mock data for now")
-            return createMockHotelResponse()
-            
+
+            val rawResponse = hotelListResponse.bodyAsText()
+            Log.d("ApiService", "📄 Hotel API raw response: $rawResponse")
+
+            val json = Json { ignoreUnknownKeys = true }
+            val hotelListData = json.decodeFromString<HotelListResponse>(rawResponse)
+            val hotels = hotelListData.data ?: emptyList()
+
+            Log.d("ApiService", "✅ Found ${hotels.size} hotels")
+
+            // Convert hotel list to hotel offers (without contact)
+            val hotelOffers = hotels.take(10).map { hotel ->
+                HotelOffer(
+                    type = "hotel-offer",
+                    hotel = HotelInfo(
+                        hotelId = hotel.hotelId,
+                        name = hotel.name,
+                        rating = hotel.rating?.toIntOrNull(),
+                        address = hotel.address
+                        // contact is omitted
+                    ),
+                    offers = listOf(
+                        HotelOfferDetail(
+                            id = "OFFER_${hotel.hotelId}",
+                            checkInDate = checkInDate,
+                            checkOutDate = checkOutDate,
+                            price = HotelPrice(
+                                currency = "USD",
+                                total = (100 + (0..200).random()).toString(),
+                                base = null,
+                                taxes = null
+                            ),
+                            guests = HotelGuests(adults)
+                        )
+                    ),
+                    available = true
+                )
+            }
+
+            HotelResponse(data = hotelOffers)
+
         } catch (e: Exception) {
-            Log.e("ApiService", "Hotel offers error: ${e.message}", e)
+            Log.e("ApiService", "🚨 Hotel search error: ${e.message}", e)
             null
         }
     }
