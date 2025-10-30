@@ -327,3 +327,13 @@ data class Meta(
 data class Links(
     @SerialName("self") val self: String? = null
 )
+
+@Serializable
+data class LocationResponse(
+    val data: List<LocationData>? = null
+)
+
+@Serializable
+data class LocationData(
+    val name: String
+)

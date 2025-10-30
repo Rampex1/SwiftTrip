@@ -483,4 +483,20 @@ class ApiService {
             )
         )
     }
+    suspend fun getLocationSuggestions(auth: String, keyword: String): LocationResponse? {
+        return try {
+            Log.d("ApiService", "🔍 Searching city suggestions for: '$keyword'")
+            val response: LocationResponse = client.get("v1/reference-data/locations") {
+                header("Authorization", auth)
+                parameter("subType", "CITY")
+                parameter("keyword", keyword)
+                parameter("page[limit]", 10)  // Limit to 10 suggestions
+            }.body()
+            Log.d("ApiService", "📊 API returned ${response.data?.size ?: 0} city suggestions")
+            response
+        } catch (e: Exception) {
+            Log.e("ApiService", "🚨 City suggestions error for '$keyword': ${e.message}", e)
+            null
+        }
+    }
 }

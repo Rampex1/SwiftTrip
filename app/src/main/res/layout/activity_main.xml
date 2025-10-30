@@ -74,6 +74,7 @@
                 android:layout_marginBottom="24dp" />
 
             <!-- From Location -->
+            <!-- From Location -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/fromLocationLayout"
                 android:layout_width="match_parent"
@@ -83,9 +84,9 @@
                 app:startIconDrawable="@drawable/ic_flight_takeoff"
                 app:boxStrokeColor="@color/primary_blue"
                 app:hintTextColor="@color/primary_blue"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/fromLocationEdit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -104,9 +105,9 @@
                 app:startIconDrawable="@drawable/ic_flight_land"
                 app:boxStrokeColor="@color/primary_blue"
                 app:hintTextColor="@color/primary_blue"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <AutoCompleteTextView
                     android:id="@+id/toLocationEdit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

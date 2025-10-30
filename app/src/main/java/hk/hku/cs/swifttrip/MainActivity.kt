@@ -2,11 +2,8 @@ package hk.hku.cs.swifttrip
 
 import android.app.DatePickerDialog
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -23,12 +20,18 @@ import java.util.*
 import kotlinx.coroutines.Dispatchers
 import com.google.gson.Gson
 import androidx.core.graphics.toColorInt
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 
 class MainActivity : AppCompatActivity() {
 
     // UI Components
-    private lateinit var fromLocationEdit: TextInputEditText
-    private lateinit var toLocationEdit: TextInputEditText
+    private lateinit var fromLocationEdit: AutoCompleteTextView
+    private lateinit var toLocationEdit: AutoCompleteTextView
+    private lateinit var fromAdapter: ArrayAdapter<String>
+    private lateinit var toAdapter: ArrayAdapter<String>
     private lateinit var departureDateEdit: TextInputEditText
     private lateinit var returnDateEdit: TextInputEditText
 
@@ -75,6 +78,7 @@ class MainActivity : AppCompatActivity() {
         setupDatePickers()
         setupSearchButton()
         calculatePassengers()
+        setupAutoComplete()
 
     }
     private fun initializeViews() {
@@ -447,5 +451,73 @@ class MainActivity : AppCompatActivity() {
             passengers = tvAdult.text.toString() + ", " + tvChild.text.toString(),
             timestamp = System.currentTimeMillis()
         )
+    }
+
+    private fun setupAutoComplete() {
+        fromAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line)
+        fromLocationEdit.setAdapter(fromAdapter)
+        fromLocationEdit.threshold = 1
+
+        fromLocationEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val text = s.toString().trim()
+                if (text.length >= 2) {
+                    lifecycleScope.launch {
+                        val token = withContext(Dispatchers.IO) { apiService.getAmadeusAccessToken() }
+                        if (token == null) {
+                            Toast.makeText(this@MainActivity, "Unable to fetch suggestions", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+                        val auth = "Bearer $token"
+                        val response = withContext(Dispatchers.IO) { apiService.getLocationSuggestions(auth, text) }
+                        val suggestions = response?.data?.map { it.name } ?: emptyList()
+                        fromAdapter.clear()
+                        fromAdapter.addAll(suggestions)
+                        fromAdapter.notifyDataSetChanged()
+                        if (suggestions.isNotEmpty()) {
+                            fromLocationEdit.showDropDown()
+                        }
+                    }
+                } else {
+                    fromAdapter.clear()
+                    fromAdapter.notifyDataSetChanged()
+                }
+            }
+        })
+
+        toAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line)
+        toLocationEdit.setAdapter(toAdapter)
+        toLocationEdit.threshold = 1
+
+        toLocationEdit.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val text = s.toString().trim()
+                if (text.length >= 2) {
+                    lifecycleScope.launch {
+                        val token = withContext(Dispatchers.IO) { apiService.getAmadeusAccessToken() }
+                        if (token == null) {
+                            Toast.makeText(this@MainActivity, "Unable to fetch suggestions", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+                        val auth = "Bearer $token"
+                        val response = withContext(Dispatchers.IO) { apiService.getLocationSuggestions(auth, text) }
+                        val suggestions = response?.data?.map { it.name } ?: emptyList()
+                        toAdapter.clear()
+                        toAdapter.addAll(suggestions)
+                        toAdapter.notifyDataSetChanged()
+                        if (suggestions.isNotEmpty()) {
+                            toLocationEdit.showDropDown()
+                        }
+                    }
+                } else {
+                    toAdapter.clear()
+                    toAdapter.notifyDataSetChanged()
+                }
+            }
+        })
     }
 }
