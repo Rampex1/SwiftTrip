@@ -335,5 +335,5 @@ data class LocationResponse(
 
 @Serializable
 data class LocationData(
-    val name: String
+    val name: String,          // e.g., "Paris CDG"
 )

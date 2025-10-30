@@ -289,21 +289,21 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             // Show network status
             Toast.makeText(this@MainActivity, "Checking network connectivity...", Toast.LENGTH_SHORT).show()
-            
+
             // Fetch both flights and hotels in parallel
             val flightResponse = getFlightSearchData(searchData)
             val hotelResponse = getHotelSearchData(searchData)
-            
+
             searchButton.isEnabled = true
             searchButton.text = "Search Flights & Hotels"
-            
+
             // If both API calls failed, show a message but still navigate with mock data
             if (flightResponse == null && hotelResponse == null) {
                 Toast.makeText(this@MainActivity, "Network unavailable - showing sample results", Toast.LENGTH_LONG).show()
             } else {
                 Toast.makeText(this@MainActivity, "Search completed successfully", Toast.LENGTH_SHORT).show()
             }
-            
+
             // Navigate to results activity
             showSearchResults(searchData, flightResponse, hotelResponse)
         }
@@ -426,8 +426,8 @@ class MainActivity : AppCompatActivity() {
             return null
         }
 
-        val response = withContext(Dispatchers.IO) { 
-            apiService.getHotelOffers(auth, destCode, checkInDate, checkOutDate, adults) 
+        val response = withContext(Dispatchers.IO) {
+            apiService.getHotelOffers(auth, destCode, checkInDate, checkOutDate, adults)
         }
 
         if (response == null || response.data == null) {
@@ -463,7 +463,7 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val text = s.toString().trim()
-                if (text.length >= 2) {
+                if (text.isNotEmpty()) {
                     lifecycleScope.launch {
                         val token = withContext(Dispatchers.IO) { apiService.getAmadeusAccessToken() }
                         if (token == null) {
@@ -496,7 +496,7 @@ class MainActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val text = s.toString().trim()
-                if (text.length >= 2) {
+                if (text.isNotEmpty()) {
                     lifecycleScope.launch {
                         val token = withContext(Dispatchers.IO) { apiService.getAmadeusAccessToken() }
                         if (token == null) {
@@ -520,4 +520,5 @@ class MainActivity : AppCompatActivity() {
             }
         })
     }
+
 }
