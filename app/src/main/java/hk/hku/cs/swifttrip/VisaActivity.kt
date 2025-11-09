@@ -1,6 +1,8 @@
 package hk.hku.cs.swifttrip
 
+import android.content.Context
 import android.graphics.Color
+import android.location.Geocoder
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
@@ -72,8 +74,10 @@ class VisaActivity : AppCompatActivity() {
             android.R.layout.simple_list_item_1,
             countries
         )
-        val fromCountryFull = intent.getStringExtra("fromLocation") ?: ""
-        val toCountryFull = intent.getStringExtra("toLocation") ?: ""
+        val fromLocation = intent.getStringExtra("fromLocation") ?: ""
+        val toLocation = intent.getStringExtra("toLocation") ?: ""
+
+
 
         visaDropdown.setAdapter(adapter)
         visaDropdown.setOnClickListener { visaDropdown.showDropDown() }
@@ -82,9 +86,23 @@ class VisaActivity : AppCompatActivity() {
             fromVisaTextView.text="..."
             val selectedCountry = parent.getItemAtPosition(position) as String
 
-            callVisa(selectedCountry, toCountryFull, toVisaTextView)
-            callVisa(selectedCountry, fromCountryFull, fromVisaTextView)
-        }    }
+            callVisa(selectedCountry, getCountry(this, fromLocation), toVisaTextView)
+            callVisa(selectedCountry, getCountry(this, toLocation), fromVisaTextView)
+        }
+    }
+    fun getCountry(context: Context, location: String): String {
+        val geocoder = Geocoder(context, Locale.getDefault())
+        return try {
+            val addresses = geocoder.getFromLocationName(location, 1)
+            if (!addresses.isNullOrEmpty()) {
+                addresses[0].countryName ?: location // fallback to input if country not found
+            } else {
+                location // fallback
+            }
+        } catch (e: Exception) {
+            location // fallback
+        }
+    }
 
     private fun callVisa(userCountry: String, lookupCountry: String, visaTextView: TextView) {
         activityScope.launch {

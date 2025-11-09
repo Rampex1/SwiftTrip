@@ -218,10 +218,6 @@ class MainActivity : AppCompatActivity() {
         val departureText = departureDateEdit.text.toString().trim()
         val returnText = returnDateEdit.text.toString().trim()
 
-        // For whatever reason, the API does not accept traveller counts >= 10.
-        // As such, have implemented this as a temporary measure
-        // Will go back and implement logic so that grey appears when attempted,
-        // but for now error message - kk
         if(childCount + adultCount > 9){
                 Toast.makeText(this, "Passenger count must be less than 10", Toast.LENGTH_SHORT).show()
                 return false
