@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SwiftTrip</string>
+
+    <string name="default_web_client_id">1058228622775-v09is1j7huelisp6em74kgfmlj7ococo.apps.googleusercontent.com</string>
 </resources>

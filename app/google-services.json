@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1058228622775",
+    "project_id": "swiftapp-6d44e",
+    "storage_bucket": "swiftapp-6d44e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1058228622775:android:b24d7c21b6fef34987c432",
+        "android_client_info": {
+          "package_name": "hk.hku.cs.swifttrip"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1058228622775-v09is1j7huelisp6em74kgfmlj7ococo.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "hk.hku.cs.swifttrip",
+            "certificate_hash": "0c3432996e6f2e9ae45c8a2ae24062250199a568"
+          }
+        },
+        {
+          "client_id": "1058228622775-3boprm7tsekhbmrrb8u8d7scm8084kee.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCu5ZreZjPRGutmoQcvgrgUPpJiRJmcPBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1058228622775-3boprm7tsekhbmrrb8u8d7scm8084kee.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
