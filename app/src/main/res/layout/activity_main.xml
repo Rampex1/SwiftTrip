@@ -33,7 +33,7 @@
             android:id="@+id/appSubtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="The perfect getaway - for students"
+            android:text="The perfect getaway for students"
             android:textSize="16sp"
             android:textColor="@android:color/white"
             android:layout_gravity="center"
@@ -92,7 +92,7 @@
                     android:inputType="text"
                     android:textSize="16sp"
                     android:completionThreshold="3"
-                    android:dropDownHeight="200dp" />
+                    android:dropDownHeight="wrap_content" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -115,7 +115,7 @@
                     android:inputType="text"
                     android:textSize="16sp"
                     android:completionThreshold="3"
-                    android:dropDownHeight="200dp" />
+                    android:dropDownHeight="wrap_content" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -360,7 +360,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="• Book 2-8 weeks in advance for best deals\n• Consider nearby airports for more options\n• Check visa requirements for your destination by using our visa checker"
+            android:text="• Book 2-8 weeks in advance for best deals\n• Check visa requirements for your destination by using our visa checker"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:lineSpacingExtra="2dp" />

@@ -122,7 +122,7 @@ class ApiService {
             val hotelListResponse = client.get("v1/reference-data/locations/hotels/by-city") {
                 header("Authorization", auth)
                 parameter("cityCode", cityCode)
-                parameter("radius", 20) // Wideddn search radius for more options
+                parameter("radius", 20)
                 parameter("radiusUnit", "KM")
             }
 
@@ -132,7 +132,6 @@ class ApiService {
             }
 
             val hotelListData = hotelListResponse.body<HotelListResponse>()
-            // Extract the hotel IDs from the first response
             val hotelIds = hotelListData.data?.mapNotNull { it.hotelId }
 
             if (hotelIds.isNullOrEmpty()) {
@@ -141,9 +140,6 @@ class ApiService {
             }
 
             // --- Call 2: Get Actual Hotel Offers using Hotel IDs ---
-
-            // Amadeus API expects a comma-separated string of IDs
-            // We take 10 to avoid making the request URL too long
             val hotelIdsString = hotelIds.take(10).joinToString(",")
             Log.d("ApiService", "Getting offers for ${hotelIds.size} hotels (using $hotelIdsString)...")
 
@@ -161,13 +157,12 @@ class ApiService {
             }
 
             // Parse the REAL response from the /hotel-offers endpoint
-            // This assumes your HotelResponse data class matches the v3 endpoint's structure
             val realHotelResponse = httpResponse.body<HotelResponse>()
-            Log.d("ApiService", "✅ Successfully received ${realHotelResponse.data} real hotel offers.")
+            Log.d("ApiService", "Successfully received ${realHotelResponse.data} real hotel offers.")
             return realHotelResponse
 
         } catch (e: Exception) {
-            Log.e("ApiService", "🚨 Hotel search error: ${e.message}", e)
+            Log.e("ApiService", "Hotel search error: ${e.message}", e)
             return null
         }
     }

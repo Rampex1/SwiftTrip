@@ -31,6 +31,7 @@ import hk.hku.cs.swifttrip.utils.HotelUtils
 import hk.hku.cs.swifttrip.utils.getCompleteItinerary
 import java.text.SimpleDateFormat
 import java.util.*
+import android.widget.LinearLayout
 
 class ResultsActivity : AppCompatActivity() {
 
@@ -424,16 +425,242 @@ class ResultsActivity : AppCompatActivity() {
     // ---------------------- HELPER AND MAPPER METHODS ----------------------
 
     private fun showFlightDetails(flight: FlightOffer) {
-        val details = flight.getCompleteItinerary()
-        val detailText = details.joinToString("\n")
+        val scrollView = android.widget.ScrollView(this)
+        val mainLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 48, 48, 48)
+        }
+        scrollView.addView(mainLayout)
 
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle("Flight Details")
-            .setMessage(detailText)
-            .setPositiveButton("OK") { dialog, _ ->
+        // Add header
+        val headerText = TextView(this).apply {
+            text = "Flight Details"
+            textSize = 24f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(getColor(R.color.text_primary))
+            setPadding(0, 0, 0, 24)
+        }
+        mainLayout.addView(headerText)
+
+        // Add price card
+        val priceCard = androidx.cardview.widget.CardView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(0, 0, 0, 32)
+            }
+            radius = 24f
+            setCardBackgroundColor(getColor(R.color.primary_blue))
+            cardElevation = 8f
+        }
+
+        val priceLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(32, 32, 32, 32)
+            gravity = android.view.Gravity.CENTER_VERTICAL
+        }
+
+        val priceTextLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                1f
+            )
+        }
+
+        priceTextLayout.addView(TextView(this).apply {
+            text = "Total Price"
+            textSize = 14f
+            setTextColor(android.graphics.Color.WHITE)
+            alpha = 0.9f
+        })
+
+        priceTextLayout.addView(TextView(this).apply {
+            text = "${flight.price?.total} ${flight.price?.currency}"
+            textSize = 28f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(android.graphics.Color.WHITE)
+            setPadding(0, 8, 0, 0)
+        })
+
+        priceLayout.addView(priceTextLayout)
+        priceCard.addView(priceLayout)
+        mainLayout.addView(priceCard)
+
+
+        // Add itinerary header
+        mainLayout.addView(TextView(this).apply {
+            text = "Itinerary"
+            textSize = 18f
+            setTypeface(null, android.graphics.Typeface.BOLD)
+            setTextColor(getColor(R.color.text_primary))
+            setPadding(0, 0, 0, 24)
+        })
+
+        // Add segments
+        flight.itineraries?.forEach { itinerary ->
+            itinerary.segments?.forEach { segment ->
+                val segmentCard = androidx.cardview.widget.CardView(this).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 0, 0, 24)
+                    }
+                    radius = 24f
+                    cardElevation = 6f
+                    setCardBackgroundColor(android.graphics.Color.WHITE)
+                }
+
+                val segmentLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(32, 32, 32, 32)
+                }
+
+                // Flight number and duration header
+                val headerRow = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 0, 0, 32)
+                    }
+                }
+
+                headerRow.addView(TextView(this).apply {
+                    text = "✈️ ${segment.carrierCode} ${segment.number}"
+                    textSize = 14f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(getColor(R.color.primary_blue))
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
+                })
+
+                headerRow.addView(TextView(this).apply {
+                    text = segment.duration
+                    textSize = 14f
+                    setTextColor(getColor(R.color.text_secondary))
+                    setPadding(24, 8, 24, 8)
+                    setBackgroundColor(getColor(R.color.accent_light))
+                })
+
+                segmentLayout.addView(headerRow)
+
+                // Route layout
+                val routeLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                }
+
+                // Departure info
+                val departureLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
+                }
+
+                departureLayout.addView(TextView(this).apply {
+                    text = segment.departure?.iataCode
+                    textSize = 24f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(getColor(R.color.text_primary))
+                })
+
+                departureLayout.addView(TextView(this).apply {
+                    text = segment.departure?.at?.split("T")[1]?.substring(0, 5)
+                    textSize = 16f
+                    setTextColor(getColor(R.color.text_primary))
+                    setPadding(0, 8, 0, 0)
+                })
+
+                departureLayout.addView(TextView(this).apply {
+                    text = segment.departure?.at?.split("T")[0]
+                    textSize = 12f
+                    setTextColor(getColor(R.color.text_secondary))
+                    setPadding(0, 4, 0, 0)
+                })
+
+                routeLayout.addView(departureLayout)
+
+                // Arrow
+                val arrowLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = android.view.Gravity.CENTER
+                    setPadding(32, 0, 32, 0)
+                }
+
+                arrowLayout.addView(TextView(this).apply {
+                    text = "→"
+                    textSize = 32f
+                    setTextColor(getColor(R.color.primary_blue))
+                })
+
+                routeLayout.addView(arrowLayout)
+
+                // Arrival info
+                val arrivalLayout = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    gravity = android.view.Gravity.END
+                    layoutParams = LinearLayout.LayoutParams(
+                        0,
+                        android.widget.LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f
+                    )
+                }
+
+                arrivalLayout.addView(TextView(this).apply {
+                    text = segment.arrival?.iataCode
+                    textSize = 24f
+                    setTypeface(null, android.graphics.Typeface.BOLD)
+                    setTextColor(getColor(R.color.text_primary))
+                    gravity = android.view.Gravity.END
+                })
+
+                arrivalLayout.addView(TextView(this).apply {
+                    text = segment.arrival?.at?.split("T")[1]?.substring(0, 5)
+                    textSize = 16f
+                    setTextColor(getColor(R.color.text_primary))
+                    gravity = android.view.Gravity.END
+                    setPadding(0, 8, 0, 0)
+                })
+
+                arrivalLayout.addView(TextView(this).apply {
+                    text = segment.arrival?.at?.split("T")[0]
+                    textSize = 12f
+                    setTextColor(getColor(R.color.text_secondary))
+                    gravity = android.view.Gravity.END
+                    setPadding(0, 4, 0, 0)
+                })
+
+                routeLayout.addView(arrivalLayout)
+                segmentLayout.addView(routeLayout)
+
+                segmentCard.addView(segmentLayout)
+                mainLayout.addView(segmentCard)
+            }
+        }
+
+        // Create and show dialog
+        val dialog = androidx.appcompat.app.AlertDialog.Builder(this)
+            .setView(scrollView)
+            .setNegativeButton("Close") { dialog, _ ->
                 dialog.dismiss()
             }
-            .show()
+            .create()
+
+        dialog.show()
+
+        // Style buttons
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE)?.setTextColor(getColor(R.color.primary_blue))
+        dialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEGATIVE)?.setTextColor(getColor(R.color.text_secondary))
     }
 
     private fun mapToHotel(offer: HotelOffer): Hotel {

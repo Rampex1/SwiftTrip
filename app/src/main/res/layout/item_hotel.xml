@@ -44,48 +44,12 @@
 
         </LinearLayout>
 
-        <!-- Rating and Reviews -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:id="@+id/hotelRatingText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="⭐⭐⭐⭐⭐"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp" />
-
-            <TextView
-                android:id="@+id/hotelReviewsText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="(4.8/5 - 320 reviews)"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary" />
-
-        </LinearLayout>
-
         <!-- Location -->
         <TextView
             android:id="@+id/hotelLocationText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="📍 Champs-Élysées, 0.2km to Arc de Triomphe"
-            android:textSize="12sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="8dp" />
-
-        <!-- Amenities -->
-        <TextView
-            android:id="@+id/hotelAmenitiesText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="WiFi • Pool • Spa • Gym"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="8dp" />
