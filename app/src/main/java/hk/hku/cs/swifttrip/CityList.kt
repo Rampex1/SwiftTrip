@@ -1,7 +1,7 @@
 package hk.hku.cs.swifttrip
 
 object CityList {
-    val topCities = listOf(
+    val availableCities = listOf(
         CitySuggestion("New York"),
         CitySuggestion("Los Angeles"),
         CitySuggestion("London"),

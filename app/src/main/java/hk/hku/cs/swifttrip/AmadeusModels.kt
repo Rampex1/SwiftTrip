@@ -26,7 +26,7 @@ data class FlightSearchRequest(
     val originDestinations: List<OriginDestination>,
     val travelers: List<Traveler>,
     val sources: List<String>,
-    val searchCriteria: SearchCriteria = SearchCriteria(50)
+    val searchCriteria: FlightSearchOptions = FlightSearchOptions(50)
 )
 @Serializable
 data class OriginDestination(
@@ -37,15 +37,15 @@ data class OriginDestination(
 )
 @Serializable
 data class DateTimeRange(
-    val date: String  // "YYYY-MM-DD"
+    val date: String
 )
 @Serializable
 data class Traveler(
     val id: String,
-    val travelerType: String  // "ADULT" or "CHILD"
+    val travelerType: String
 )
 @Serializable
-data class SearchCriteria(
+data class FlightSearchOptions(
     val maxFlightOffers: Int
 )
 

@@ -28,39 +28,28 @@ import androidx.core.graphics.toColorInt
 class MainActivity : AppCompatActivity() {
 
     // UI Components
-    private lateinit var fromLocationEdit: AppCompatAutoCompleteTextView
-    private lateinit var toLocationEdit: AppCompatAutoCompleteTextView
-    private lateinit var departureDateEdit: TextInputEditText
-    private lateinit var returnDateEdit: TextInputEditText
-
+    private lateinit var originInput: AppCompatAutoCompleteTextView
+    private lateinit var destinationInput: AppCompatAutoCompleteTextView
+    private lateinit var departureDateInput: TextInputEditText
+    private lateinit var returnDateInput: TextInputEditText
     private lateinit var searchButton: MaterialButton
-    private lateinit var adultPlusButton: MaterialButton
-    private lateinit var adultMinusButton: MaterialButton
-    private lateinit var childPlusButton: MaterialButton
-    private lateinit var childMinusButton: MaterialButton
-    private lateinit var tvAdult: TextView
-    private lateinit var tvChild: TextView
-
-
+    private lateinit var adultIncrementButton: MaterialButton
+    private lateinit var adultDecrementButton: MaterialButton
+    private lateinit var childIncrementButton: MaterialButton
+    private lateinit var childDecrementButton: MaterialButton
+    private lateinit var adultCountText: TextView
+    private lateinit var childCountText: TextView
 
     private lateinit var apiService: ApiService
+    private var originAdapter: CityAutocompleteAdapter? = null
+    private var destinationAdapter: CityAutocompleteAdapter? = null
 
-    // Date formatting
-    private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    private val calendar = Calendar.getInstance()
+    private val displayDateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     private val apiDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-
-    // Initial passenger counts
     private var adultCount = 1
     private var childCount = 0
-
-    // Selected dates
-    private var departureDate: Calendar? = null
-    private var returnDate: Calendar? = null
-
-    // Autocomplete
-    private var fromLocationAdapter: CityAutocompleteAdapter? = null
-    private var toLocationAdapter: CityAutocompleteAdapter? = null
+    private var selectedDepartureDate: Calendar? = null
+    private var selectedReturnDate: Calendar? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,97 +73,77 @@ class MainActivity : AppCompatActivity() {
 
     }
     private fun initializeViews() {
-        fromLocationEdit = findViewById(R.id.fromLocationEdit)
-        toLocationEdit = findViewById(R.id.toLocationEdit)
-        departureDateEdit = findViewById(R.id.departureDateEdit)
-        returnDateEdit = findViewById(R.id.returnDateEdit)
-        adultPlusButton = findViewById(R.id.adultPlusButton)
-        adultMinusButton = findViewById(R.id.adultMinusButton)
-        childPlusButton = findViewById(R.id.childPlusButton)
-        childMinusButton = findViewById(R.id.childMinusButton)
-        tvAdult = findViewById(R.id.tvAdult)
-        tvChild = findViewById(R.id.tvChild)
+        originInput = findViewById(R.id.fromLocationEdit)
+        destinationInput = findViewById(R.id.toLocationEdit)
+        departureDateInput = findViewById(R.id.departureDateEdit)
+        returnDateInput = findViewById(R.id.returnDateEdit)
+        adultIncrementButton = findViewById(R.id.adultPlusButton)
+        adultDecrementButton = findViewById(R.id.adultMinusButton)
+        childIncrementButton = findViewById(R.id.childPlusButton)
+        childDecrementButton = findViewById(R.id.childMinusButton)
+        adultCountText = findViewById(R.id.tvAdult)
+        childCountText = findViewById(R.id.tvChild)
         searchButton = findViewById(R.id.searchButton)
-
     }
 
 
 
 
     private fun calculatePassengers() {
-        adultPlusButton.setOnClickListener {
-            adultCount = adultCount + 1
-            adultMinusButton.setBackgroundColor("#2196F3".toColorInt())
-            updatePassText("Adult")
+        adultIncrementButton.setOnClickListener {
+            adultCount++
+            adultDecrementButton.setBackgroundColor("#2196F3".toColorInt())
+            updatePassengerCountText()
         }
-        adultMinusButton.setOnClickListener {
-            if (adultCount > 1){
-                adultCount = adultCount - 1
+        adultDecrementButton.setOnClickListener {
+            if (adultCount > 1) {
+                adultCount--
                 if (adultCount == 1) {
-                    adultMinusButton.setBackgroundColor("#777679".toColorInt())
+                    adultDecrementButton.setBackgroundColor("#777679".toColorInt())
                 }
             }
-            updatePassText("Adult")
+            updatePassengerCountText()
         }
-        childPlusButton.setOnClickListener {
-            childCount = childCount + 1
-            childMinusButton.setBackgroundColor("#2196F3".toColorInt())
-            updatePassText("Child")
+        childIncrementButton.setOnClickListener {
+            childCount++
+            childDecrementButton.setBackgroundColor("#2196F3".toColorInt())
+            updatePassengerCountText()
         }
-        childMinusButton.setOnClickListener {
-            if (childCount > 0){
-                childCount = childCount - 1
+        childDecrementButton.setOnClickListener {
+            if (childCount > 0) {
+                childCount--
                 if (childCount == 0) {
-                    childMinusButton.setBackgroundColor("#777679".toColorInt())
+                    childDecrementButton.setBackgroundColor("#777679".toColorInt())
                 }
             }
-            updatePassText("Child")
+            updatePassengerCountText()
         }
-
-
     }
-    private fun updatePassText(string: String){
-        if (string == "Adult"){
-            if (adultCount == 1){
-                tvAdult.text = adultCount.toString() + " Adult"
-            }
-            else {
-                tvAdult.text = adultCount.toString() + " Adults"
-            }
-        }
-        else{
-            if (childCount == 1){
-                tvChild.text = childCount.toString() + " Child"
-            }
-            else{
-                tvChild.text = childCount.toString() + " Children"
-            }
-        }
+
+    private fun updatePassengerCountText() {
+        adultCountText.text = if (adultCount == 1) "$adultCount Adult" else "$adultCount Adults"
+        childCountText.text = if (childCount == 1) "$childCount Child" else "$childCount Children"
     }
 
     private fun setupDatePickers() {
-        // Departure date picker
-        departureDateEdit.setOnClickListener {
+        departureDateInput.setOnClickListener {
             showDatePicker { selectedDate ->
-                departureDate = selectedDate
-                departureDateEdit.setText(dateFormat.format(selectedDate.time))
-
-                // Clear return date if it's before departure date
-                returnDate?.let { returnCal ->
-                    if (returnCal.before(selectedDate)) {
-                        returnDate = null
-                        returnDateEdit.setText("")
+                selectedDepartureDate = selectedDate
+                departureDateInput.setText(displayDateFormat.format(selectedDate.time))
+                selectedReturnDate?.let { returnDate ->
+                    if (returnDate.before(selectedDate)) {
+                        selectedReturnDate = null
+                        returnDateInput.setText("")
                     }
                 }
             }
         }
 
-        // Return date picker
-        returnDateEdit.setOnClickListener {
-            val minDate = departureDate?.timeInMillis ?: System.currentTimeMillis()
+        returnDateInput.setOnClickListener {
+            val minDate = selectedDepartureDate?.timeInMillis ?: System.currentTimeMillis()
             showDatePicker(minDate = minDate) { selectedDate ->
-                returnDate = selectedDate
-                returnDateEdit.setText(dateFormat.format(selectedDate.time))
+                selectedReturnDate = selectedDate
+                returnDateInput.setText(displayDateFormat.format(selectedDate.time))
             }
         }
     }
@@ -219,53 +188,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun validateInputs(): Boolean {
-        val fromLocation = fromLocationEdit.text.toString().trim()
-        val toLocation = toLocationEdit.text.toString().trim()
-        val departureText = departureDateEdit.text.toString().trim()
-        val returnText = returnDateEdit.text.toString().trim()
+        val origin = originInput.text.toString().trim()
+        val destination = destinationInput.text.toString().trim()
+        val departureText = departureDateInput.text.toString().trim()
+        val returnText = returnDateInput.text.toString().trim()
 
-        if(childCount + adultCount > 9){
-                Toast.makeText(this, "Passenger count must be less than 10", Toast.LENGTH_SHORT).show()
-                return false
-        }
-
-
-
-        // Validate from location
-        if (fromLocation.isEmpty()) {
-            fromLocationEdit.error = "Please enter departure location"
-            fromLocationEdit.requestFocus()
+        if (childCount + adultCount > 9) {
+            Toast.makeText(this, "Passenger count must be less than 10", Toast.LENGTH_SHORT).show()
             return false
         }
 
-        // Validate to location
-        if (toLocation.isEmpty()) {
-            toLocationEdit.error = "Please enter destination"
-            toLocationEdit.requestFocus()
+        if (origin.isEmpty()) {
+            originInput.error = "Please enter departure location"
+            originInput.requestFocus()
             return false
         }
 
-        // Check if locations are different
-        if (fromLocation.equals(toLocation, ignoreCase = true)) {
-            toLocationEdit.error = "Destination must be different from departure location"
-            toLocationEdit.requestFocus()
+        if (destination.isEmpty()) {
+            destinationInput.error = "Please enter destination"
+            destinationInput.requestFocus()
             return false
         }
 
-        // Validate departure date
+        if (origin.equals(destination, ignoreCase = true)) {
+            destinationInput.error = "Destination must be different from departure location"
+            destinationInput.requestFocus()
+            return false
+        }
+
         if (departureText.isEmpty()) {
             Toast.makeText(this, "Please select departure date", Toast.LENGTH_SHORT).show()
             return false
         }
 
-        // Validate return date
         if (returnText.isEmpty()) {
             Toast.makeText(this, "Please select return date", Toast.LENGTH_SHORT).show()
             return false
         }
 
-        // Validate date order
-        if (departureDate != null && returnDate != null && returnDate!!.before(departureDate)) {
+        if (selectedDepartureDate != null && selectedReturnDate != null && selectedReturnDate!!.before(selectedDepartureDate)) {
             Toast.makeText(this, "Return date cannot be before departure date", Toast.LENGTH_SHORT).show()
             return false
         }
@@ -278,93 +239,64 @@ class MainActivity : AppCompatActivity() {
         searchButton.isEnabled = false
         searchButton.text = "Searching..."
 
-        // Get form data
-        val searchData = getSearchData()
-
-        // Show loading toast
+        val criteria = buildSearchCriteria()
         Toast.makeText(this, "Searching for flights and hotels...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
-            // Show network status
-            Toast.makeText(this@MainActivity, "Checking network connectivity...", Toast.LENGTH_SHORT).show()
-            
-            // Fetch both flights and hotels in parallel
-            val flightResponse = getFlightSearchData(searchData)
-            val hotelResponse = getHotelSearchData(searchData)
+            val flightResponse = searchFlights(criteria)
+            val hotelResponse = searchHotels(criteria)
             
             searchButton.isEnabled = true
             searchButton.text = "Search Flights & Hotels"
             
-            // If both API calls failed, show a message but still navigate with mock data
             if (flightResponse == null && hotelResponse == null) {
                 Toast.makeText(this@MainActivity, "Network unavailable - showing sample results", Toast.LENGTH_LONG).show()
             } else {
                 Toast.makeText(this@MainActivity, "Search completed successfully", Toast.LENGTH_SHORT).show()
             }
             
-            // Navigate to results activity
-            showSearchResults(searchData, flightResponse, hotelResponse)
+            navigateToResults(criteria, flightResponse, hotelResponse)
         }
     }
 
-    private fun showSearchResults(searchData: SearchData, flightResponse: FlightResponse?, hotelResponse: HotelResponse?) {
-        // Navigate to ResultsActivity
+    private fun navigateToResults(criteria: SearchCriteria, flightResponse: FlightResponse?, hotelResponse: HotelResponse?) {
         val intent = Intent(this, ResultsActivity::class.java)
-        intent.putExtra("fromLocation", searchData.fromLocation)
-        intent.putExtra("toLocation", searchData.toLocation)
-        intent.putExtra("departureDate", searchData.departureDate?.timeInMillis ?: 0L)
-        intent.putExtra("returnDate", searchData.returnDate?.timeInMillis ?: 0L)
-        intent.putExtra("passengers", searchData.passengers)
-        // Pass flight response as JSON string extra (using Gson for serialization)
+        intent.putExtra("fromLocation", criteria.origin)
+        intent.putExtra("toLocation", criteria.destination)
+        intent.putExtra("departureDate", criteria.departureDate?.timeInMillis ?: 0L)
+        intent.putExtra("returnDate", criteria.returnDate?.timeInMillis ?: 0L)
+        intent.putExtra("passengers", criteria.passengers)
         intent.putExtra("flightResponseJson", Gson().toJson(flightResponse))
-        // Pass hotel response as JSON string extra
         intent.putExtra("hotelResponseJson", Gson().toJson(hotelResponse))
         startActivity(intent)
     }
 
-    private suspend fun getFlightSearchData(sd: SearchData): FlightResponse? {
-        Log.d("MainActivity", "=== ATTEMPTING TO GET FLIGHT DATA ===")
-        Log.d("MainActivity", "Search data: from=${sd.fromLocation}, to=${sd.toLocation}")
-
+    private suspend fun searchFlights(criteria: SearchCriteria): FlightResponse? {
         val token = withContext(Dispatchers.IO) {
-            Log.d("MainActivity", "Calling getAmadeusAccessToken()...")
-            val result = apiService.getAmadeusAccessToken()
-            Log.d("MainActivity", "Token result: ${if (result != null) "SUCCESS (${result.take(10)}...)" else "NULL"}")
-            result
+            apiService.getAmadeusAccessToken()
+        } ?: run {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "Using mock flight data (API unavailable)", Toast.LENGTH_SHORT).show()
+            }
+            return null
         }
 
-        if (token == null) {
-            Log.e("MainActivity", "=== TOKEN IS NULL - USING MOCK DATA ===")
+        val auth = "Bearer $token"
+        val departureDateStr = apiDateFormat.format(criteria.departureDate?.time ?: return null)
+        val returnDateStr = apiDateFormat.format(criteria.returnDate?.time ?: return null)
+
+        val originCode = withContext(Dispatchers.IO) {
+            apiService.getAirportCode(auth, criteria.origin)
+        }
+        val destinationCode = withContext(Dispatchers.IO) {
+            apiService.getAirportCode(auth, criteria.destination)
+        }
+
+        if (originCode == null || destinationCode == null) {
             withContext(Dispatchers.Main) {
                 Toast.makeText(
                     this@MainActivity,
-                    "Using mock flight data (API unavailable)",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }
-
-        Log.d("MainActivity", "=== TOKEN SUCCESS - PROCEEDING WITH API CALLS ===")
-
-        val auth = "Bearer $token"
-        val depDateStr = apiDateFormat.format(sd.departureDate?.time ?: return null)
-        val retDateStr = apiDateFormat.format(sd.returnDate?.time ?: return null)
-        val adults = adultCount
-
-        // ✅ CHANGED: Use airport code lookup instead of city code
-        val originCode = withContext(Dispatchers.IO) {
-            apiService.getAirportCode(auth, sd.fromLocation)
-        }
-        val destCode = withContext(Dispatchers.IO) {
-            apiService.getAirportCode(auth, sd.toLocation)
-        }
-
-        Log.d("MainActivity", "📍 Airport codes - Origin: $originCode, Destination: $destCode")
-
-        if (originCode == null || destCode == null) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@MainActivity,
-                    "Could not find airport codes for: ${sd.fromLocation} or ${sd.toLocation}",
+                    "Could not find airport codes for: ${criteria.origin} or ${criteria.destination}",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -372,41 +304,29 @@ class MainActivity : AppCompatActivity() {
         }
 
         val response = withContext(Dispatchers.IO) {
-            apiService.getFlightOffers(auth, originCode, destCode, depDateStr, retDateStr, adults)
-        }
-
-        // ✅ ADDED: Log the flight response
-        Log.d("MainActivity", "=== FLIGHT SEARCH RESPONSE ===")
-        if (response != null) {
-            Log.d("MainActivity", "✅ SUCCESS - Found ${response.data?.size ?: 0} flights")
-            response.data?.take(2)?.forEachIndexed { index, flight ->
-                Log.d("MainActivity", "Flight ${index + 1}: ${flight.price?.currency} ${flight.price?.total}")
-            }
-        } else {
-            Log.d("MainActivity", "❌ FAILED - No flight response")
-        }
-
-        if (response == null || response.data == null) {
+            apiService.getFlightOffers(auth, originCode, destinationCode, departureDateStr, returnDateStr, adultCount)
+        } ?: run {
             withContext(Dispatchers.Main) {
-                if (response == null) {
-                    Toast.makeText(this@MainActivity, "Flight search failed (check logs for error).", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "No flights found for this route/dates.", Toast.LENGTH_SHORT).show()
-                }
+                Toast.makeText(this@MainActivity, "Flight search failed", Toast.LENGTH_SHORT).show()
             }
             return null
         }
 
-        return response
-    }
-
-    private suspend fun getHotelSearchData(sd: SearchData): HotelResponse? {
-        val token = withContext(Dispatchers.IO) {
-            apiService.getAmadeusAccessToken()
+        if (response.data == null) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@MainActivity, "No flights found for this route/dates", Toast.LENGTH_SHORT).show()
+            }
+            return null
         }
 
-        if (token == null) {
-            Log.e("MainActivity", "Failed to fetch access token, returning mock hotel data")
+        val uniqueFlights = FlightUtils.removeDuplicateFlights(response.data!!)
+        return FlightResponse(data = uniqueFlights, errors = response.errors)
+    }
+
+    private suspend fun searchHotels(criteria: SearchCriteria): HotelResponse? {
+        val token = withContext(Dispatchers.IO) {
+            apiService.getAmadeusAccessToken()
+        } ?: run {
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@MainActivity, "Using mock hotel data (API unavailable)", Toast.LENGTH_SHORT).show()
             }
@@ -414,65 +334,47 @@ class MainActivity : AppCompatActivity() {
         }
 
         val auth = "Bearer $token"
-        val checkInDate = apiDateFormat.format(sd.departureDate?.time ?: return null)
-        val checkOutDate = apiDateFormat.format(sd.returnDate?.time ?: return null)
-        val adults = adultCount
+        val checkInDate = apiDateFormat.format(criteria.departureDate?.time ?: return null)
+        val checkOutDate = apiDateFormat.format(criteria.returnDate?.time ?: return null)
 
-        val destCode = withContext(Dispatchers.IO) { apiService.getCityCode(auth, sd.toLocation) }
+        val cityCode = withContext(Dispatchers.IO) {
+            apiService.getCityCode(auth, criteria.destination)
+        } ?: return null
 
-        if (destCode == null) {
-            return null
+        return withContext(Dispatchers.IO) {
+            apiService.getHotelOffers(auth, cityCode, checkInDate, checkOutDate, adultCount)
         }
-
-        val response = withContext(Dispatchers.IO) { 
-            apiService.getHotelOffers(auth, destCode, checkInDate, checkOutDate, adults) 
-        }
-
-        if (response == null || response.data == null) {
-            if (response == null) {
-                Log.e("MainActivity", "Hotel search failed")
-            } else {
-                Log.e("MainActivity", "No hotels found for this destination/dates")
-            }
-            return null
-        }
-
-        return response
     }
 
-    private fun getSearchData(): SearchData {
-        return SearchData(
-            fromLocation = fromLocationEdit.text.toString().trim(),
-            toLocation = toLocationEdit.text.toString().trim(),
-            departureDate = departureDate,
-            returnDate = returnDate,
-            passengers = tvAdult.text.toString() + ", " + tvChild.text.toString(),
+    private fun buildSearchCriteria(): SearchCriteria {
+        return SearchCriteria(
+            origin = originInput.text.toString().trim(),
+            destination = destinationInput.text.toString().trim(),
+            departureDate = selectedDepartureDate,
+            returnDate = selectedReturnDate,
+            passengers = "${adultCountText.text}, ${childCountText.text}",
             timestamp = System.currentTimeMillis()
         )
     }
 
     private fun setupAutocomplete() {
-        // Create adapters for both fields using hardcoded city list
-        fromLocationAdapter = CityAutocompleteAdapter(this)
-        toLocationAdapter = CityAutocompleteAdapter(this)
+        originAdapter = CityAutocompleteAdapter(this)
+        destinationAdapter = CityAutocompleteAdapter(this)
 
-        fromLocationEdit.setAdapter(fromLocationAdapter)
-        toLocationEdit.setAdapter(toLocationAdapter)
+        originInput.setAdapter(originAdapter)
+        destinationInput.setAdapter(destinationAdapter)
 
-        // Set up item click listeners to populate the field
-        fromLocationEdit.setOnItemClickListener { _, _, position, _ ->
-            val suggestion = fromLocationAdapter?.getItem(position)
-            suggestion?.let {
-                fromLocationEdit.setText(it.cityName, false)
-                fromLocationEdit.dismissDropDown()
+        originInput.setOnItemClickListener { _, _, position, _ ->
+            originAdapter?.getItem(position)?.let {
+                originInput.setText(it.cityName, false)
+                originInput.dismissDropDown()
             }
         }
 
-        toLocationEdit.setOnItemClickListener { _, _, position, _ ->
-            val suggestion = toLocationAdapter?.getItem(position)
-            suggestion?.let {
-                toLocationEdit.setText(it.cityName, false)
-                toLocationEdit.dismissDropDown()
+        destinationInput.setOnItemClickListener { _, _, position, _ ->
+            destinationAdapter?.getItem(position)?.let {
+                destinationInput.setText(it.cityName, false)
+                destinationInput.dismissDropDown()
             }
         }
     }

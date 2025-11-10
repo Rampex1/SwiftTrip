@@ -13,68 +13,56 @@ class CityAutocompleteAdapter(
     context: Context
 ) : ArrayAdapter<CitySuggestion>(context, android.R.layout.simple_dropdown_item_1line), Filterable {
 
-    private var suggestions: List<CitySuggestion> = emptyList()
-    private val allCities = CityList.topCities
+    private var filteredCities: List<CitySuggestion> = emptyList()
+    private val allCities = CityList.availableCities
 
-    override fun getCount(): Int = suggestions.size
+    override fun getCount(): Int = filteredCities.size
 
-    override fun getItem(position: Int): CitySuggestion? = suggestions.getOrNull(position)
+    override fun getItem(position: Int): CitySuggestion? = filteredCities.getOrNull(position)
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context)
             .inflate(android.R.layout.simple_dropdown_item_1line, parent, false)
         
         val textView = view.findViewById<TextView>(android.R.id.text1)
-        val suggestion = getItem(position)
-        textView.text = suggestion?.cityName ?: ""
+        textView.text = getItem(position)?.cityName ?: ""
         
         return view
     }
 
-    override fun getFilter(): Filter {
-        return cityFilter
-    }
+    override fun getFilter(): Filter = cityFilter
 
     private val cityFilter = object : Filter() {
         override fun performFiltering(constraint: CharSequence?): FilterResults {
             val results = FilterResults()
-            
-            if (constraint == null || constraint.isEmpty()) {
+
+            if (constraint.isNullOrBlank()) {
                 results.values = emptyList<CitySuggestion>()
                 results.count = 0
                 return results
             }
 
             val query = constraint.toString().trim().lowercase()
-            
-            // Only search if query has at least 3 characters
+
             if (query.length < 3) {
                 results.values = emptyList<CitySuggestion>()
                 results.count = 0
                 return results
             }
 
-            // Filter cities from hardcoded list
-            val filteredCities = allCities
-                .filter { city ->
-                    city.cityName?.lowercase()?.contains(query.lowercase()) == true
-                }
-                .take(3) // Limit to 3 results
+            val matches = allCities
+                .filter { it.cityName?.lowercase()?.contains(query) == true  }
+                .take(3)
 
-            results.values = filteredCities
-            results.count = filteredCities.size
+            results.values = matches
+            results.count = matches.size
             return results
         }
 
         @Suppress("UNCHECKED_CAST")
         override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
-            if (results != null && results.values != null) {
-                suggestions = results.values as List<CitySuggestion>
-                notifyDataSetChanged()
-            } else {
-                suggestions = emptyList()
-                notifyDataSetInvalidated()
-            }
+            filteredCities = (results?.values as? List<CitySuggestion>) ?: emptyList()
+            notifyDataSetChanged()
         }
     }
 }

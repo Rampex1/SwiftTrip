@@ -1,18 +1,16 @@
 package hk.hku.cs.swifttrip
 
-import java.util.*
+import java.util.Calendar
 
-// Search data model
-data class SearchData(
-    val fromLocation: String,
-    val toLocation: String,
+data class SearchCriteria(
+    val origin: String,
+    val destination: String,
     val departureDate: Calendar?,
     val returnDate: Calendar?,
     val passengers: String,
     val timestamp: Long
 )
 
-// Flight data model
 data class Flight(
     val airline: String,
     val departureTime: String,
@@ -26,7 +24,6 @@ data class Flight(
     val seatsLeft: String
 )
 
-// Hotel data model
 data class Hotel(
     val name: String,
     val rating: String,
@@ -37,7 +34,6 @@ data class Hotel(
     val availability: String
 )
 
-// City autocomplete suggestion
 data class CitySuggestion(
     val cityName: String?
 )
