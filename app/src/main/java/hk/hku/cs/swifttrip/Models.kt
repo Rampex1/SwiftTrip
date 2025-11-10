@@ -36,3 +36,8 @@ data class Hotel(
     val price: String,
     val availability: String
 )
+
+// City autocomplete suggestion
+data class CitySuggestion(
+    val cityName: String?
+)

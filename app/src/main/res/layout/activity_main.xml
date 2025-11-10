@@ -85,12 +85,14 @@
                 app:hintTextColor="@color/primary_blue"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <androidx.appcompat.widget.AppCompatAutoCompleteTextView
                     android:id="@+id/fromLocationEdit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    android:completionThreshold="3"
+                    android:dropDownHeight="200dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -106,12 +108,14 @@
                 app:hintTextColor="@color/primary_blue"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
-                <com.google.android.material.textfield.TextInputEditText
+                <androidx.appcompat.widget.AppCompatAutoCompleteTextView
                     android:id="@+id/toLocationEdit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text"
-                    android:textSize="16sp" />
+                    android:textSize="16sp"
+                    android:completionThreshold="3"
+                    android:dropDownHeight="200dp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

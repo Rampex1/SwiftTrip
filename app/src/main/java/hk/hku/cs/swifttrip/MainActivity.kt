@@ -11,6 +11,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatAutoCompleteTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
@@ -27,8 +28,8 @@ import androidx.core.graphics.toColorInt
 class MainActivity : AppCompatActivity() {
 
     // UI Components
-    private lateinit var fromLocationEdit: TextInputEditText
-    private lateinit var toLocationEdit: TextInputEditText
+    private lateinit var fromLocationEdit: AppCompatAutoCompleteTextView
+    private lateinit var toLocationEdit: AppCompatAutoCompleteTextView
     private lateinit var departureDateEdit: TextInputEditText
     private lateinit var returnDateEdit: TextInputEditText
 
@@ -57,6 +58,10 @@ class MainActivity : AppCompatActivity() {
     private var departureDate: Calendar? = null
     private var returnDate: Calendar? = null
 
+    // Autocomplete
+    private var fromLocationAdapter: CityAutocompleteAdapter? = null
+    private var toLocationAdapter: CityAutocompleteAdapter? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -75,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         setupDatePickers()
         setupSearchButton()
         calculatePassengers()
+        setupAutocomplete()
 
     }
     private fun initializeViews() {
@@ -443,5 +449,31 @@ class MainActivity : AppCompatActivity() {
             passengers = tvAdult.text.toString() + ", " + tvChild.text.toString(),
             timestamp = System.currentTimeMillis()
         )
+    }
+
+    private fun setupAutocomplete() {
+        // Create adapters for both fields using hardcoded city list
+        fromLocationAdapter = CityAutocompleteAdapter(this)
+        toLocationAdapter = CityAutocompleteAdapter(this)
+
+        fromLocationEdit.setAdapter(fromLocationAdapter)
+        toLocationEdit.setAdapter(toLocationAdapter)
+
+        // Set up item click listeners to populate the field
+        fromLocationEdit.setOnItemClickListener { _, _, position, _ ->
+            val suggestion = fromLocationAdapter?.getItem(position)
+            suggestion?.let {
+                fromLocationEdit.setText(it.cityName, false)
+                fromLocationEdit.dismissDropDown()
+            }
+        }
+
+        toLocationEdit.setOnItemClickListener { _, _, position, _ ->
+            val suggestion = toLocationAdapter?.getItem(position)
+            suggestion?.let {
+                toLocationEdit.setText(it.cityName, false)
+                toLocationEdit.dismissDropDown()
+            }
+        }
     }
 }

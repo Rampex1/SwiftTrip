@@ -10,14 +10,11 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.timeout
 import io.ktor.client.statement.bodyAsText
-import io.ktor.utils.io.readUTF8Line
 
 class ApiService {
     val clientId: String = "X5JXchc2GfwloKA9uZbaZj8x8GgAMDZr"
@@ -114,6 +111,52 @@ class ApiService {
         } catch (e: Exception) {
             Log.e("ApiService", "City code error for '$keyword': ${e.message}", e)
             null
+        }
+    }
+
+    /**
+     * Searches for city/airport suggestions for autocomplete
+     * Returns up to 3 suggestions based on the keyword
+     */
+    suspend fun getCitySuggestions(auth: String, keyword: String): List<CitySuggestion> {
+        return try {
+            if (keyword.length < 3) {
+                return emptyList()
+            }
+
+            Log.d("ApiService", "🔍 Searching city suggestions for: '$keyword'")
+
+            val response: AirportResponse = client.get("v1/reference-data/locations") {
+                header("Authorization", auth)
+                parameter("keyword", keyword)
+                parameter("subType", "AIRPORT,CITY")  // Search both airports and cities
+                parameter("max", 3)  // Get up to 3 results
+            }.body()
+
+            val suggestions = response.data?.take(3)?.mapNotNull { airport ->
+                val cityName = airport.address?.cityName ?: airport.name
+                val countryName = airport.address?.countryName
+                val displayName = buildString {
+                    append(cityName ?: airport.name ?: "")
+                    countryName?.let {
+                        append(", $it")
+                    }
+                }
+                
+                if (displayName.isNotBlank()) {
+                    CitySuggestion(
+                        cityName = cityName,
+                    )
+                } else {
+                    null
+                }
+            } ?: emptyList()
+
+            Log.d("ApiService", "✅ Found ${suggestions.size} city suggestions")
+            suggestions
+        } catch (e: Exception) {
+            Log.e("ApiService", "City suggestions error for '$keyword': ${e.message}", e)
+            emptyList()
         }
     }
 
