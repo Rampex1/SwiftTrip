@@ -111,17 +111,6 @@ data class Aircraft(@SerialName("code") val code: String? = null)
 @Serializable
 data class Operating(@SerialName("carrierCode") val carrierCode: String? = null)
 
-// Hotel Request
-@Serializable
-data class HotelSearchRequest(
-    val cityCode: String,
-    val checkInDate: String,
-    val checkOutDate: String,
-    val roomQuantity: Int = 1,
-    val adults: Int = 1,
-    val currencyCode: String = "USD"
-)
-
 // Airport Data Models
 @Serializable
 data class AirportResponse(

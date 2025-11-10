@@ -27,7 +27,7 @@ import androidx.core.graphics.toColorInt
 
 class MainActivity : AppCompatActivity() {
 
-    // UI Components
+    // ------------ UI COMPONENTS ------------------- //
     private lateinit var originInput: AppCompatAutoCompleteTextView
     private lateinit var destinationInput: AppCompatAutoCompleteTextView
     private lateinit var departureDateInput: TextInputEditText
@@ -72,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         setupAutocomplete()
 
     }
+
     private fun initializeViews() {
         originInput = findViewById(R.id.fromLocationEdit)
         destinationInput = findViewById(R.id.toLocationEdit)
@@ -86,9 +87,7 @@ class MainActivity : AppCompatActivity() {
         searchButton = findViewById(R.id.searchButton)
     }
 
-
-
-
+    // ---------------- ADULT/CHILDREN COUNT BUTTON ------------------- //
     private fun calculatePassengers() {
         adultIncrementButton.setOnClickListener {
             adultCount++
@@ -125,6 +124,7 @@ class MainActivity : AppCompatActivity() {
         childCountText.text = if (childCount == 1) "$childCount Child" else "$childCount Children"
     }
 
+    // ------------------- DATE PICKER -------------------------------- //
     private fun setupDatePickers() {
         departureDateInput.setOnClickListener {
             showDatePicker { selectedDate ->
@@ -179,6 +179,7 @@ class MainActivity : AppCompatActivity() {
         datePickerDialog.show()
     }
 
+    // ------------------------- SEARCH BUTTON ----------------------------- //
     private fun setupSearchButton() {
         searchButton.setOnClickListener {
             if (validateInputs()) {
@@ -259,6 +260,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // ---------------------- API CONNECTION ---------------------------- //
     private fun navigateToResults(criteria: SearchCriteria, flightResponse: FlightResponse?, hotelResponse: HotelResponse?) {
         val intent = Intent(this, ResultsActivity::class.java)
         intent.putExtra("fromLocation", criteria.origin)
@@ -357,6 +359,7 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // ---------------------- AUTOCOMPLETE ---------------------------------- //
     private fun setupAutocomplete() {
         originAdapter = CityAutocompleteAdapter(this)
         destinationAdapter = CityAutocompleteAdapter(this)
