@@ -1,10 +1,14 @@
 package hk.hku.cs.swifttrip
 
+import FlightOffer
+import FlightResponse
+import Hotel
+import HotelOffer
+import HotelResponse
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
-import android.widget.RadioButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +21,20 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.slider.RangeSlider
 import com.google.android.material.tabs.TabLayout
 import com.google.gson.Gson
+import hk.hku.cs.swifttrip.adapter.FlightOfferAdapter
+import hk.hku.cs.swifttrip.adapter.HotelAdapter
+import hk.hku.cs.swifttrip.utils.FlightFilterCriteria
+import hk.hku.cs.swifttrip.utils.FlightSortOption
+import hk.hku.cs.swifttrip.utils.FlightUtils
+import hk.hku.cs.swifttrip.utils.HotelSortOption
+import hk.hku.cs.swifttrip.utils.HotelUtils
+import hk.hku.cs.swifttrip.utils.getCompleteItinerary
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ResultsActivity : AppCompatActivity() {
 
+    // ----------------- PROPERTIES -----------------------
     private lateinit var toolbar: MaterialToolbar
     private lateinit var routeText: TextView
     private lateinit var datesText: TextView
@@ -54,6 +67,8 @@ class ResultsActivity : AppCompatActivity() {
     private var currentFlightSort: FlightSortOption? = null
     private var currentHotelSort: HotelSortOption? = null
 
+    // -------------------- ACTIVITY LIFECYCLE ------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_results)
@@ -83,16 +98,19 @@ class ResultsActivity : AppCompatActivity() {
             null
         }
 
+        // Call setup methods
         initializeViews()
         setupToolbar()
         loadSearchData()
         setupTabs()
         setupButtons()
-        loadFlightResults()
         setupVisaButton()
+
+        // Load initial tab
+        loadFlightResults()
     }
 
-
+    // ----------------------- INITIAL SETUP --------------------
 
     private fun initializeViews() {
         toolbar = findViewById(R.id.toolbar)
@@ -132,6 +150,7 @@ class ResultsActivity : AppCompatActivity() {
 
         passengersText.text = passengers
     }
+
     private fun setupVisaButton(){
         visaButton.setOnClickListener {
             val fromLocation = intent.getStringExtra("fromLocation") ?: "New York"
@@ -142,6 +161,7 @@ class ResultsActivity : AppCompatActivity() {
 
             startActivity(intent) }
     }
+
     private fun setupTabs() {
         tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
@@ -176,11 +196,14 @@ class ResultsActivity : AppCompatActivity() {
         }
     }
 
+    // --------------- DATA LOADING AND UI UPDATES -------------------
+
     private fun loadFlightResults() {
         originalFlights = if (flightResponse?.data?.isNotEmpty() == true) {
             Log.d("ResultsActivity", "Using real flight data: ${flightResponse!!.data!!.size} offers")
             flightResponse!!.data!!
         } else {
+            Log.d("ResultsActivity", "No real flight data found. Displaying empty list.")
             emptyList()
         }
 
@@ -206,8 +229,8 @@ class ResultsActivity : AppCompatActivity() {
             Log.d("ResultsActivity", "Using real hotel data: ${hotelResponse!!.data!!.size} offers")
             hotelResponse!!.data!!.map { offer -> mapToHotel(offer) }
         } else {
-            Log.d("ResultsActivity", "Using mock hotel data")
-            generateMockHotels()
+            Log.d("ResultsActivity", "No real hotel data found. Displaying empty list.")
+            emptyList() // Return an empty list
         }
 
         // Apply current sort
@@ -230,7 +253,8 @@ class ResultsActivity : AppCompatActivity() {
         Toast.makeText(this, "Package deals feature under development", Toast.LENGTH_SHORT).show()
     }
 
-    // SORT DIALOGS
+    // ------------------- DIALOG AND EVENT HANDLERS ------------------
+
     private fun showFlightSortDialog() {
         val dialog = BottomSheetDialog(this)
         val view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_sort_flights, null)
@@ -313,7 +337,6 @@ class ResultsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    // FILTER DIALOG
     private fun showFlightFilterDialog() {
         val dialog = BottomSheetDialog(this)
         val view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_filter_flights, null)
@@ -398,6 +421,8 @@ class ResultsActivity : AppCompatActivity() {
         dialog.show()
     }
 
+    // ---------------------- HELPER AND MAPPER METHODS ----------------------
+
     private fun showFlightDetails(flight: FlightOffer) {
         val details = flight.getCompleteItinerary()
         val detailText = details.joinToString("\n")
@@ -415,31 +440,24 @@ class ResultsActivity : AppCompatActivity() {
         val hotelInfo = offer.hotel
         val firstOffer = offer.offers?.firstOrNull()
 
+        // --- REAL DATA ---
         val name = hotelInfo?.name ?: "Unknown Hotel"
-        val rating = hotelInfo?.rating?.let { "⭐".repeat(it) } ?: "⭐⭐⭐"
-        val reviews = "(4.5/5 - 150 reviews)"
-        val location = hotelInfo?.address?.let { addr ->
-            "📍 ${addr.cityName ?: "Unknown City"}, ${addr.lines?.firstOrNull() ?: ""}"
-        } ?: "📍 Location not available"
-        val amenities = "WiFi • Breakfast • Pool"
-        val price = firstOffer?.price?.total?.let { "$it/night" } ?: "Price not available"
-        val availability = "Available"
 
-        return Hotel(name, rating, reviews, location, amenities, price, availability)
-    }
+        // Get price and currency
+        val price = firstOffer?.price?.total
+        val currency = firstOffer?.price?.currency
+        val priceText = if (price != null && currency != null) {
+            "$price $currency / night"
+        } else {
+            "Price not available"
+        }
 
-    private fun generateMockHotels(): List<Hotel> {
-        return listOf(
-            Hotel("Le Grand Hotel Paris", "⭐⭐⭐⭐⭐", "(4.8/5 - 320 reviews)", "📍 Champs-Élysées, 0.2km to Arc de Triomphe", "WiFi • Pool • Spa • Gym", "$250/night", "2 rooms left"),
-            Hotel("Hotel de la Place", "⭐⭐⭐⭐", "(4.5/5 - 180 reviews)", "📍 Latin Quarter, 0.3km to Notre-Dame", "WiFi • Breakfast • Bar", "$120/night", "5 rooms left"),
-            Hotel("Paris Luxury Suites", "⭐⭐⭐⭐⭐", "(4.9/5 - 450 reviews)", "📍 Opera District, 0.1km to Galeries Lafayette", "WiFi • Pool • Restaurant • Concierge", "$320/night", "1 room left"),
-            Hotel("Montmartre Inn", "⭐⭐⭐", "(4.2/5 - 95 reviews)", "📍 Montmartre, 0.5km to Sacré-Cœur", "WiFi • Breakfast", "$85/night", "8 rooms left"),
-            Hotel("Riverside Hotel Paris", "⭐⭐⭐⭐", "(4.6/5 - 220 reviews)", "📍 Seine Riverbank, 0.4km to Eiffel Tower", "WiFi • River View • Restaurant", "$180/night", "4 rooms left"),
-            Hotel("Budget Stay Paris", "⭐⭐", "(3.8/5 - 60 reviews)", "📍 Outer District, 2km to city center", "WiFi • Kitchen", "$55/night", "12 rooms left"),
-            Hotel("Boutique Hotel Marais", "⭐⭐⭐⭐", "(4.7/5 - 155 reviews)", "📍 Le Marais, 0.3km to Place des Vosges", "WiFi • Breakfast • Garden", "$145/night", "3 rooms left"),
-            Hotel("Palace de Paris", "⭐⭐⭐⭐⭐", "(4.9/5 - 580 reviews)", "📍 1st Arrondissement, 0.1km to Louvre", "WiFi • Pool • Spa • Fine Dining • Butler", "$450/night", "2 rooms left"),
-            Hotel("Cozy Corner Hotel", "⭐⭐⭐", "(4.0/5 - 75 reviews)", "📍 Belleville, 1.5km to attractions", "WiFi • Breakfast", "$70/night", "10 rooms left"),
-            Hotel("Eiffel View Hotel", "⭐⭐⭐⭐", "(4.4/5 - 200 reviews)", "📍 Trocadéro, 0.3km to Eiffel Tower", "WiFi • Breakfast • Terrace", "$165/night", "6 rooms left")
-        )
+        // Get availability
+        val availability = if (offer.available == true) "Available" else "Not Available"
+
+        // Get location (only cityCode is available in this API)
+        val location = "📍 ${hotelInfo?.cityCode ?: "Unknown City"}"
+
+        return Hotel(name, location, priceText, availability)
     }
 }

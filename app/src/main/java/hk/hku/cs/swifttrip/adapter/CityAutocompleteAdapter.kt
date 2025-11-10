@@ -1,5 +1,6 @@
-package hk.hku.cs.swifttrip
+package hk.hku.cs.swifttrip.adapter
 
+import android.R
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -8,10 +9,12 @@ import android.widget.ArrayAdapter
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
+import hk.hku.cs.swifttrip.utils.CityList
+import hk.hku.cs.swifttrip.utils.CitySuggestion
 
 class CityAutocompleteAdapter(
     context: Context
-) : ArrayAdapter<CitySuggestion>(context, android.R.layout.simple_dropdown_item_1line), Filterable {
+) : ArrayAdapter<CitySuggestion>(context, R.layout.simple_dropdown_item_1line), Filterable {
 
     private var filteredCities: List<CitySuggestion> = emptyList()
     private val allCities = CityList.availableCities
@@ -22,11 +25,11 @@ class CityAutocompleteAdapter(
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val view = convertView ?: LayoutInflater.from(context)
-            .inflate(android.R.layout.simple_dropdown_item_1line, parent, false)
-        
-        val textView = view.findViewById<TextView>(android.R.id.text1)
+            .inflate(R.layout.simple_dropdown_item_1line, parent, false)
+
+        val textView = view.findViewById<TextView>(R.id.text1)
         textView.text = getItem(position)?.cityName ?: ""
-        
+
         return view
     }
 
@@ -66,4 +69,3 @@ class CityAutocompleteAdapter(
         }
     }
 }
-

@@ -1,12 +1,11 @@
 package hk.hku.cs.swifttrip
 
+import FlightResponse
+import HotelResponse
+import SearchCriteria
 import android.app.DatePickerDialog
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +23,8 @@ import java.util.*
 import kotlinx.coroutines.Dispatchers
 import com.google.gson.Gson
 import androidx.core.graphics.toColorInt
+import hk.hku.cs.swifttrip.adapter.CityAutocompleteAdapter
+import hk.hku.cs.swifttrip.utils.FlightUtils
 
 class MainActivity : AppCompatActivity() {
 
@@ -288,10 +289,10 @@ class MainActivity : AppCompatActivity() {
         val returnDateStr = apiDateFormat.format(criteria.returnDate?.time ?: return null)
 
         val originCode = withContext(Dispatchers.IO) {
-            apiService.getAirportCode(auth, criteria.origin)
+            apiService.getAirportCode(criteria.origin)
         }
         val destinationCode = withContext(Dispatchers.IO) {
-            apiService.getAirportCode(auth, criteria.destination)
+            apiService.getAirportCode(criteria.destination)
         }
 
         if (originCode == null || destinationCode == null) {
@@ -332,7 +333,6 @@ class MainActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 Toast.makeText(this@MainActivity, "Using mock hotel data (API unavailable)", Toast.LENGTH_SHORT).show()
             }
-            return apiService.createMockHotelResponse()
         }
 
         val auth = "Bearer $token"

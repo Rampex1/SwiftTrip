@@ -1,5 +1,7 @@
-package hk.hku.cs.swifttrip
+package hk.hku.cs.swifttrip.utils
 
+import FlightOffer
+import Hotel
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -115,13 +117,14 @@ object FlightUtils {
     }
 }
 
+
 object HotelUtils {
     fun sortHotels(hotels: List<Hotel>, sortOption: HotelSortOption): List<Hotel> {
         return when (sortOption) {
             HotelSortOption.PRICE_LOW_TO_HIGH -> hotels.sortedBy { parsePrice(it.price) }
             HotelSortOption.PRICE_HIGH_TO_LOW -> hotels.sortedByDescending { parsePrice(it.price) }
-            HotelSortOption.RATING_HIGH_TO_LOW -> hotels.sortedByDescending { parseRating(it.rating) }
             HotelSortOption.NAME_A_TO_Z -> hotels.sortedBy { it.name }
+            HotelSortOption.RATING_HIGH_TO_LOW -> TODO()
         }
     }
 
@@ -129,49 +132,9 @@ object HotelUtils {
         val regex = """\$?(\d+\.?\d*)""".toRegex()
         return regex.find(priceString)?.groupValues?.get(1)?.toFloatOrNull() ?: Float.MAX_VALUE
     }
-
-    private fun parseRating(ratingString: String): Int {
-        return ratingString.count { it == '⭐' }
-    }
 }
 
-fun FlightOffer.getNumberOfStops(): Int {
-    val firstSegment = itineraries?.firstOrNull()?.segments
-    return if (firstSegment != null) {
-        (firstSegment.size - 1).coerceAtLeast(0)
-    } else {
-        0
-    }
-}
-
-fun FlightOffer.getTotalDurationMinutes(): Int {
-    val duration = itineraries?.firstOrNull()?.duration
-    return if (duration != null) {
-        parseDurationToMinutes(duration)
-    } else {
-        Int.MAX_VALUE
-    }
-}
-
-fun FlightOffer.getDepartureTime(): Calendar? {
-    val departureAt = itineraries?.firstOrNull()?.segments?.firstOrNull()?.departure?.at
-    return if (departureAt != null) {
-        parseIsoDateTime(departureAt)
-    } else {
-        null
-    }
-}
-
-fun FlightOffer.getArrivalTime(): Calendar? {
-    val arrivalAt = itineraries?.firstOrNull()?.segments?.lastOrNull()?.arrival?.at
-    return if (arrivalAt != null) {
-        parseIsoDateTime(arrivalAt)
-    } else {
-        null
-    }
-}
-
-private fun parseDurationToMinutes(duration: String): Int {
+fun parseDurationToMinutes(duration: String): Int {
     var totalMinutes = 0
     val hoursRegex = """(\d+)H""".toRegex()
     val minutesRegex = """(\d+)M""".toRegex()
@@ -187,7 +150,7 @@ private fun parseDurationToMinutes(duration: String): Int {
     return totalMinutes
 }
 
-private fun parseIsoDateTime(isoString: String): Calendar? {
+fun parseIsoDateTime(isoString: String): Calendar? {
     return try {
         val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         val date = format.parse(isoString)

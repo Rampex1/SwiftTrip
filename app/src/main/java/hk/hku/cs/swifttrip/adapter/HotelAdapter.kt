@@ -1,10 +1,12 @@
-package hk.hku.cs.swifttrip
+package hk.hku.cs.swifttrip.adapter
 
+import Hotel
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import hk.hku.cs.swifttrip.R
 
 class HotelAdapter(private val hotels: List<Hotel>) : RecyclerView.Adapter<HotelAdapter.HotelViewHolder>() {
 
@@ -23,19 +25,13 @@ class HotelAdapter(private val hotels: List<Hotel>) : RecyclerView.Adapter<Hotel
     class HotelViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val hotelNameText: TextView = itemView.findViewById(R.id.hotelNameText)
         private val hotelPriceText: TextView = itemView.findViewById(R.id.hotelPriceText)
-        private val hotelRatingText: TextView = itemView.findViewById(R.id.hotelRatingText)
-        private val hotelReviewsText: TextView = itemView.findViewById(R.id.hotelReviewsText)
         private val hotelLocationText: TextView = itemView.findViewById(R.id.hotelLocationText)
-        private val hotelAmenitiesText: TextView = itemView.findViewById(R.id.hotelAmenitiesText)
         private val hotelAvailabilityText: TextView = itemView.findViewById(R.id.hotelAvailabilityText)
 
         fun bind(hotel: Hotel) {
             hotelNameText.text = hotel.name
             hotelPriceText.text = hotel.price
-            hotelRatingText.text = hotel.rating
-            hotelReviewsText.text = hotel.reviews
             hotelLocationText.text = hotel.location
-            hotelAmenitiesText.text = hotel.amenities
             hotelAvailabilityText.text = hotel.availability
         }
     }

@@ -1,6 +1,45 @@
-package hk.hku.cs.swifttrip
+package hk.hku.cs.swifttrip.utils
+
+import FlightOffer
+import Itinerary
+import java.util.Calendar
 
 // Extension functions for FlightOffer
+fun FlightOffer.getNumberOfStops(): Int {
+    val firstSegment = itineraries?.firstOrNull()?.segments
+    return if (firstSegment != null) {
+        (firstSegment.size - 1).coerceAtLeast(0)
+    } else {
+        0
+    }
+}
+
+fun FlightOffer.getTotalDurationMinutes(): Int {
+    val duration = itineraries?.firstOrNull()?.duration
+    return if (duration != null) {
+        parseDurationToMinutes(duration)
+    } else {
+        Int.MAX_VALUE
+    }
+}
+
+fun FlightOffer.getDepartureTime(): Calendar? {
+    val departureAt = itineraries?.firstOrNull()?.segments?.firstOrNull()?.departure?.at
+    return if (departureAt != null) {
+        parseIsoDateTime(departureAt)
+    } else {
+        null
+    }
+}
+
+fun FlightOffer.getArrivalTime(): Calendar? {
+    val arrivalAt = itineraries?.firstOrNull()?.segments?.lastOrNull()?.arrival?.at
+    return if (arrivalAt != null) {
+        parseIsoDateTime(arrivalAt)
+    } else {
+        null
+    }
+}
 fun FlightOffer.getOutboundRoute(): String {
     val itinerary = this.itineraries?.getOrNull(0) ?: return ""
     return getRouteSummary(itinerary)
@@ -69,36 +108,6 @@ private fun getDetailedItinerary(itinerary: Itinerary): List<String> {
             details.add("  🔄 Connection")
         }
     }
-
-    return details
-}
-
-// UI formatting functions
-fun FlightOffer.formatFlightForDisplay(): String {
-    val sb = StringBuilder()
-
-    sb.append("💰 ${this.price?.currency} ${this.price?.total}\n")
-    sb.append("✈️ ${this.validatingAirlineCodes?.joinToString() ?: "Multiple Airlines"}\n")
-    sb.append("🛫 ${this.getOutboundRoute()}\n")
-    sb.append("🛬 ${this.getReturnRoute()}\n")
-    sb.append("💺 ${this.numberOfBookableSeats ?: 0} seats available")
-
-    return sb.toString()
-}
-
-fun getFlightDetails(flight: FlightOffer): List<String> {
-    val details = mutableListOf<String>()
-
-    details.add("Flight Details")
-    details.add("Price: ${flight.price?.currency} ${flight.price?.total}")
-    details.add("Base Fare: ${flight.price?.base}")
-    details.add("Total: ${flight.price?.grandTotal}")
-    details.add("Airline: ${flight.validatingAirlineCodes?.joinToString() ?: "Multiple"}")
-    details.add("Available Seats: ${flight.numberOfBookableSeats ?: 0}")
-    details.add("")
-
-    // Add complete itinerary
-    details.addAll(flight.getCompleteItinerary())
 
     return details
 }

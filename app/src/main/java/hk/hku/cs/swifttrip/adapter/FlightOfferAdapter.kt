@@ -1,11 +1,15 @@
-package hk.hku.cs.swifttrip
+package hk.hku.cs.swifttrip.adapter
 
+import FlightOffer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.card.MaterialCardView
+import hk.hku.cs.swifttrip.R
+import hk.hku.cs.swifttrip.utils.getOutboundRoute
+import hk.hku.cs.swifttrip.utils.getReturnRoute
 
 class FlightOfferAdapter(
     private val flights: List<FlightOffer>,
