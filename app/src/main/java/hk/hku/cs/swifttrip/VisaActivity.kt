@@ -102,8 +102,8 @@ class VisaActivity : AppCompatActivity() {
             showLoading(true)
             resetVisaInfo()
 
-            callVisa(selectedCountry, getCountry(this, fromLocation), toVisaTextView, toVisaCard, true)
-            callVisa(selectedCountry, getCountry(this, toLocation), fromVisaTextView, fromVisaCard, false)
+            callVisa(selectedCountry, getCountry(this, fromLocation), fromVisaTextView, fromVisaCard, true)
+            callVisa(selectedCountry, getCountry(this, toLocation), toVisaTextView, toVisaCard, false)
         }
     }
 
@@ -156,7 +156,7 @@ class VisaActivity : AppCompatActivity() {
     ) {
         activityScope.launch {
             try {
-                val userCountryCode = Locale.getISOCountries().firstOrNull() { code ->
+                val userCountryCode = Locale.getISOCountries().firstOrNull { code ->
                     Locale("", code).displayCountry.equals(userCountry, ignoreCase = true)
                 }
                 val lookupCountryCode = Locale.getISOCountries().firstOrNull { code ->
@@ -171,35 +171,40 @@ class VisaActivity : AppCompatActivity() {
                 val status = category?.get("name")?.jsonPrimitive?.content
                 val duration = json["dur"]?.jsonPrimitive?.intOrNull
 
+                val prefix = if (isFirstCall)
+                    "$lookupCountry:\n"
+                else
+                    "$lookupCountry:\n"
+
                 when (status?.lowercase(Locale.ROOT)) {
                     "visa free" -> {
                         val text = if (duration != null)
-                            "✓ Visa not required (up to $duration days)"
+                            prefix + "✓ Visa not required (up to $duration days)"
                         else
-                            "✓ Visa not required"
+                            prefix + "✓ Visa not required"
 
                         visaTextView.text = text
                         visaTextView.setTextColor(Color.parseColor("#1B5E20"))
                         cardView.setCardBackgroundColor(Color.parseColor("#E8F5E9"))
                     }
                     "evisa" -> {
-                        visaTextView.text = "⚠ eVisa available"
+                        visaTextView.text = prefix + "⚠ eVisa available"
                         visaTextView.setTextColor(Color.parseColor("#E65100"))
                         cardView.setCardBackgroundColor(Color.parseColor("#FFF3E0"))
                     }
                     "visa required" -> {
-                        visaTextView.text = "✕ Visa required"
+                        visaTextView.text = prefix + "✕ Visa required"
                         visaTextView.setTextColor(Color.parseColor("#B71C1C"))
                         cardView.setCardBackgroundColor(Color.parseColor("#FFEBEE"))
                     }
                     else -> {
-                        visaTextView.text = "Information unavailable"
+                        visaTextView.text = prefix + "Information unavailable"
                         visaTextView.setTextColor(Color.GRAY)
                         cardView.setCardBackgroundColor(Color.parseColor("#F5F5F5"))
                     }
                 }
             } catch (e: Exception) {
-                visaTextView.text = "Failed to fetch information"
+                visaTextView.text = "$lookupCountry:\nFailed to fetch information"
                 visaTextView.setTextColor(Color.GRAY)
                 cardView.setCardBackgroundColor(Color.parseColor("#F5F5F5"))
             } finally {
@@ -211,6 +216,7 @@ class VisaActivity : AppCompatActivity() {
             }
         }
     }
+
 
     override fun onDestroy() {
         super.onDestroy()
