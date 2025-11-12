@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -66,7 +67,6 @@ class ResultsActivity : AppCompatActivity() {
     // Filter and sort state
     private var flightFilterCriteria = FlightFilterCriteria()
     private var currentFlightSort: FlightSortOption? = null
-    private var currentHotelSort: HotelSortOption? = null
 
     // -------------------- ACTIVITY LIFECYCLE ------------------
 
@@ -160,7 +160,8 @@ class ResultsActivity : AppCompatActivity() {
             intent.putExtra("fromLocation", fromLocation)
             intent.putExtra("toLocation", toLocation)
 
-            startActivity(intent) }
+            startActivity(intent)
+        }
     }
 
     private fun setupTabs() {
@@ -172,6 +173,8 @@ class ResultsActivity : AppCompatActivity() {
                     1 -> loadHotelResults()
                     2 -> loadPackageResults()
                 }
+                // Update button visibility based on tab
+                updateButtonVisibility()
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
@@ -179,11 +182,27 @@ class ResultsActivity : AppCompatActivity() {
         })
     }
 
+    private fun updateButtonVisibility() {
+        when (currentTab) {
+            0 -> { // Flights tab
+                sortButton.visibility = View.VISIBLE
+                filterButton.visibility = View.VISIBLE
+            }
+            1 -> { // Hotels tab
+                sortButton.visibility = View.GONE
+                filterButton.visibility = View.GONE
+            }
+            2 -> { // Packages tab
+                sortButton.visibility = View.GONE
+                filterButton.visibility = View.GONE
+            }
+        }
+    }
+
     private fun setupButtons() {
         sortButton.setOnClickListener {
             when (currentTab) {
                 0 -> showFlightSortDialog()
-                1 -> showHotelSortDialog()
                 else -> Toast.makeText(this, "Sort not available for this tab", Toast.LENGTH_SHORT).show()
             }
         }
@@ -191,7 +210,6 @@ class ResultsActivity : AppCompatActivity() {
         filterButton.setOnClickListener {
             when (currentTab) {
                 0 -> showFlightFilterDialog()
-                1 -> Toast.makeText(this, "Hotel filters coming soon", Toast.LENGTH_SHORT).show()
                 else -> Toast.makeText(this, "Filter not available for this tab", Toast.LENGTH_SHORT).show()
             }
         }
@@ -231,15 +249,10 @@ class ResultsActivity : AppCompatActivity() {
             hotelResponse!!.data!!.map { offer -> mapToHotel(offer) }
         } else {
             Log.d("ResultsActivity", "No real hotel data found. Displaying empty list.")
-            emptyList() // Return an empty list
+            emptyList()
         }
 
-        // Apply current sort
         displayedHotels = originalHotels
-        currentHotelSort?.let {
-            displayedHotels = HotelUtils.sortHotels(displayedHotels, it)
-        }
-
         updateHotelDisplay()
     }
 
@@ -290,46 +303,6 @@ class ResultsActivity : AppCompatActivity() {
                 displayedFlights = FlightUtils.sortFlights(displayedFlights, it)
                 updateFlightDisplay()
                 Toast.makeText(this, "Flights sorted", Toast.LENGTH_SHORT).show()
-            }
-
-            dialog.dismiss()
-        }
-
-        dialog.show()
-    }
-
-    private fun showHotelSortDialog() {
-        val dialog = BottomSheetDialog(this)
-        val view = LayoutInflater.from(this).inflate(R.layout.bottom_sheet_sort_hotels, null)
-        dialog.setContentView(view)
-
-        val radioGroup = view.findViewById<android.widget.RadioGroup>(R.id.sortHotelRadioGroup)
-        val applyButton = view.findViewById<MaterialButton>(R.id.applyHotelSortButton)
-
-        // Pre-select current sort option
-        when (currentHotelSort) {
-            HotelSortOption.PRICE_LOW_TO_HIGH -> radioGroup.check(R.id.sortHotelPriceLowToHigh)
-            HotelSortOption.PRICE_HIGH_TO_LOW -> radioGroup.check(R.id.sortHotelPriceHighToLow)
-            HotelSortOption.RATING_HIGH_TO_LOW -> radioGroup.check(R.id.sortHotelRating)
-            HotelSortOption.NAME_A_TO_Z -> radioGroup.check(R.id.sortHotelName)
-            null -> {}
-        }
-
-        applyButton.setOnClickListener {
-            val selectedId = radioGroup.checkedRadioButtonId
-            currentHotelSort = when (selectedId) {
-                R.id.sortHotelPriceLowToHigh -> HotelSortOption.PRICE_LOW_TO_HIGH
-                R.id.sortHotelPriceHighToLow -> HotelSortOption.PRICE_HIGH_TO_LOW
-                R.id.sortHotelRating -> HotelSortOption.RATING_HIGH_TO_LOW
-                R.id.sortHotelName -> HotelSortOption.NAME_A_TO_Z
-                else -> null
-            }
-
-            // Apply sort
-            currentHotelSort?.let {
-                displayedHotels = HotelUtils.sortHotels(displayedHotels, it)
-                updateHotelDisplay()
-                Toast.makeText(this, "Hotels sorted", Toast.LENGTH_SHORT).show()
             }
 
             dialog.dismiss()
