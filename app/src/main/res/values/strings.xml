@@ -1,5 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SwiftTrip</string>
 
     <string name="default_web_client_id">1058228622775-v09is1j7huelisp6em74kgfmlj7ococo.apps.googleusercontent.com</string>
+
+    <string name="login_title">Welcome to SwiftTrip</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm Password</string>
+    <string name="btn_sign_in">Sign In</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="btn_back_to_login">Back to Login</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="or">OR</string>
+    <string name="login_hint_google">Sign in with your Google account to continue</string>
 </resources>
