@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Outer background (light blue) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/primary_blue_light" />
+        </shape>
+    </item>
+
+    <!-- Dark blue circle behind logo -->
+    <item
+        android:width="300dp"
+        android:height="300dp"
+        android:gravity="center">
+        <shape android:shape="oval">
+            <solid android:color="@color/primary_blue_dark" />
+        </shape>
+    </item>
+
+    <!-- Logo (optional for now) -->
+    <!--
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/full_logo"
+            android:width="180dp"
+            android:height="180dp"
+            android:antialias="true" />
+    </item>
+    -->
+
+</layer-list>
+
