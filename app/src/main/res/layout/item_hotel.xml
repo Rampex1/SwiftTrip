@@ -49,7 +49,7 @@
             android:id="@+id/hotelLocationText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="📍 Champs-Élysées, 0.2km to Arc de Triomphe"
+            android:text="Champs-Élysées, 0.2km to Arc de Triomphe"
             android:textSize="12sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="8dp" />

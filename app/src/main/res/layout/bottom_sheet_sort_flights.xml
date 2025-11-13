@@ -2,6 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@android:color/white"
+
     android:orientation="vertical"
     android:padding="24dp">
 
@@ -16,9 +18,12 @@
 
     <RadioGroup android:id="@+id/sortFlightRadioGroup"
         android:layout_width="match_parent"
+
         android:layout_height="wrap_content">
 
         <RadioButton
+            android:buttonTint="@color/primary_blue"
+
             android:id="@+id/sortPriceLowToHigh"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,6 +32,8 @@
             android:padding="12dp" />
 
         <RadioButton
+            android:buttonTint="@color/primary_blue"
+
             android:id="@+id/sortPriceHighToLow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -35,6 +42,8 @@
             android:padding="12dp" />
 
         <RadioButton
+            android:buttonTint="@color/primary_blue"
+
             android:id="@+id/sortDurationShortest"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -43,6 +52,8 @@
             android:padding="12dp" />
 
         <RadioButton
+            android:buttonTint="@color/primary_blue"
+
             android:id="@+id/sortDepartureMorning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -51,6 +62,8 @@
             android:padding="12dp" />
 
         <RadioButton
+            android:buttonTint="@color/primary_blue"
+
             android:id="@+id/sortArrivalMorning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -2,9 +2,12 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:backgroundTint="@android:color/white"
     android:layout_height="wrap_content">
 
     <LinearLayout
+        android:backgroundTint="@android:color/white"
+        android:background="@android:color/white"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -81,6 +84,11 @@
 
         <com.google.android.material.slider.RangeSlider
             android:id="@+id/priceRangeSlider"
+
+            app:trackColor="@color/primary_blue"
+            app:tickColor="@color/background_white"
+            app:thumbColor="@color/primary_blue"
+
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:valueFrom="0"
@@ -149,7 +157,7 @@
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:text="Clear"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                android:backgroundTint="@color/primary_blue" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/applyFiltersButton"
